@@ -1,0 +1,1189 @@
+	.code
+	.bank $000
+	.org $e22a
+gx_cd_reset:
+          lda     cd_reset                  ; setting bit 2 will reset CDROM hardware
+          ora     #$02
+          sta     cd_reset
+          lda     #$01
+          jsr     gx_cd_wait
+          lda     cd_reset                  ; reset bit 2
+          and     #$fd
+          sta     cd_reset
+          ldx     #$80                      ; wait a little longer
+@loop:
+          dex     
+          bne     @loop
+          rts     
+
+	.code
+	.bank $000
+	.org $e267
+gx_cd_wait:                                 ; A is the input parameter
+          phx                               ; it will wait for A*(loop cycles)
+          phy     
+@l0:                                        ; loop cycles cycles:
+          ldx     #$28                      ; 2
+@l1:
+          ldy     #$21                      ; 2
+@l2:
+          dey                               ; 2
+          bne     @l2                       ; 4 (2 if the branch is not taken)
+          dex                               ; 2
+          bne     @l1                       ; 4 (2 if the branch is not taken)
+          dec     A                         ; = 7962 cycles
+          bne     @l0
+          ply     
+          plx     
+          rts     
+
+	.code
+	.bank $000
+	.org $e794
+gx_adpcm_reset:
+          lda     #$80
+          sta     adpcm_addr_ctrl
+          stz     adpcm_addr_ctrl
+          stz     adpcm_dma_ctrl
+          lda     #$6f
+          trb     cd_control                ; clear all bits except bits 4 and 7
+          stz     adpcm_playback_rate
+          rts     
+
+	.code
+	.bank $000
+	.org $e865
+gx_irq_2_unknown:
+          lda     cd_control
+          and     bram_lock 
+          ora     <$19
+          sta     <$19
+          bbr2    <$19, le87c_00
+          lda     #$04
+          trb     cd_control 
+          lda     #$04
+          trb     <$19
+          cli     
+le87c_00:
+          bbr5    <$19, le8d9_00
+          lda     #$20
+          trb     cd_control
+          lda     #$20
+          trb     <$19
+          cli     
+          lda     $2206
+          beq     le891_00
+          stz     adpcm_dma_ctrl
+le891_00:
+          lda     cd_command
+          sta     $2232
+          lda     #$80
+          tsb     cd_control
+le89c_00:
+          tst     #$40, $1800
+          bne     le89c_00
+          php     
+          sei     
+          lda     #$80
+          trb     cd_control
+le8a9_00:
+          lda     cd_status
+          and     #$f8
+          cmp     #$f8
+          bne     le8a9_00
+          lda     cd_command
+          lda     #$80
+          tsb     cd_control
+          plp     
+le8bb_00:
+          tst     #$40, $1800
+          bne     le8bb_00
+          lda     #$80
+          trb     cd_control
+le8c6_00:
+          tst     #$80, $1800
+          bne     le8c6_00
+          lda     $2206
+          beq     le8d9_00
+          stz     $2206
+          lda     #$04
+          tsb     cd_control
+le8d9_00:
+          bbr4    <$19, le8f1_00
+          lda     #$10
+          trb     cd_control
+          lda     #$10
+          trb     <$19
+          cli     
+          lda     bram_unlock
+          sta     $2234
+          lda     #$10
+          tsb     cd_control
+le8f1_00:
+          bbr3    <$19, le902_00
+          lda     #$0c
+          trb     cd_control
+          lda     #$08
+          trb     <$19
+          lda     #$60
+          trb     adpcm_addr_ctrl
+le902_00:
+          rts     
+
+gx_unknown_e903:
+          php     
+          sei     
+          stz     $22be
+          ldx     #$04
+          lda     #$68
+          sta     $22ae, X
+          lda     #$ea
+          sta     $22b3, X
+          lda     #$20
+          sta     $22a4, X
+          lda     #$04
+          sta     $228b, X
+          stz     $22b8, X
+          dex     
+le922_00:
+          lda     #$00
+          sta     $228b, X
+          stz     $2290, X
+          stz     $22b8, X
+          dex     
+          bne     le922_00
+          stz     $22bd
+          lda     #$80
+          sta     $22b8, X
+          lda     #$81
+          sta     $228b
+          plp     
+          rts     
+
+	.code
+	.bank $000
+	.org $e98c
+gx_unknown_e98c:                            ; parameters: X, Y => source pointer
+          lda     #$01                      ; set bit #1
+          tsb     $22be
+          stx     <$29                      ; set data pointer
+          sty     <$28
+          clx     
+le996_00:
+          lda     $228b, X                  ; what's inside 228b and onwards?
+          cmp     #$00
+          beq     le9a3_00
+          inx     
+          cmp     #$05
+          bne     le996_00
+          brk                               ; trigger IRQ2
+le9a3_00:
+          lda     #$04
+          sta     $228b, X
+          ldy     #$01
+          lda     [$28]
+          sta     $22ae, X
+          lda     [$28], Y
+          sta     $22b3, X
+          iny     
+          lda     [$28], Y
+          sta     $22a4, X
+          iny     
+          lda     [$28], Y
+          sta     $22b8, X
+          lda     #$00
+          sta     $22a9, X
+          lda     #$01                      ; reset bit #1
+          trb     $22be                     ; does this mean that 22be is some kind of lock?
+          txa     
+          rts     
+
+	.code
+	.bank $000
+	.org $ea19
+gx_unknown_ea19:
+          phx     
+          ldx     $22bd
+          sta     $2295, X
+          pla     
+          sta     $229a, X
+          tya     
+          sta     $229f, X
+          pla     
+          sta     $22a9, X
+          pla     
+          sta     $22ae, X
+          pla     
+          sta     $22b3, X
+          sax     
+          tsx     
+          sax     
+          sta     $22a4, X
+          lda     #$04
+          sta     $228b, X
+          ldx     #$04
+lea41_00:
+          lda     $228b, X
+          cmp     #$02
+          bne     lea52_00
+          dec     $2290, X
+          bne     lea52_00
+          lda     #$04
+          sta     $228b, X
+lea52_00:
+          dex     
+          bpl     lea41_00
+          lda     #$01
+          tsb     $22be
+          clx     
+lea5b_00:
+          lda     $228b, X
+          cmp     #$04
+          beq     lea6b_00
+          inx     
+          cpx     #$05
+          bne     lea5b_00
+          brk     
+          cli     
+lea69_00:
+          bra     lea69_00
+lea6b_00:
+          stx     $22bd
+          lda     #$01
+          ora     $22b8, X
+          sta     $228b, X
+          lda     $229f, X
+          tay     
+          lda     $22a4, X
+          sax     
+          txs     
+          sax     
+          lda     $22b3, X
+          pha     
+          lda     $22ae, X
+          pha     
+          lda     $22a9, X
+          pha     
+          lda     $229a, X
+          pha     
+          sei     
+          lda     #$01
+          trb     $22be
+          lda     $2295, X
+          plx     
+          rti     
+
+gx_irq_nmi:
+          rti     
+
+	.code
+	.bank $000
+	.org $eaa3
+gx_irq_2:
+          bbr1    <irq_m, leaa9_00
+          jmp     [irq2_user_hook]
+leaa9_00:
+          pha     
+          phx     
+          phy     
+          jsr     gx_irq_2_unknown
+          ply     
+          plx     
+          pla     
+          rti     
+
+gx_irq_reset:
+          csh                           ; switch CPU to high speed mode
+          sei                           ; disable interrupts
+          cld                           ; clear decimal flag
+          lda     #$ff                  ; map I/O to the 1st memory page
+          tam     #$00
+          lda     #$f8                  ; map RAM to the 2nd memory page
+          tam     #$01
+          stz     <$00                  ; clear zero page
+          tii     $2000, $2001, $00ff
+          stz     $2200                 ; clear bss
+          tii     $2200, $2201, $1dff
+          sei                           ; disable interrupts
+          stz     timer_ctrl            ; disable CPU timer
+          csh                           ; switch CPU to high speed mode
+          ldx     #$ff                  ; reset stack pointer
+          txs     
+          lda     $22bf
+          bne     leae1_00
+          inc     $22bf
+leae1_00:
+          lda     #$01                  ; map 1st ROM bank to the 6th memory page
+          tam     #$06
+          jsr     gx_unknown_e903
+          jmp     gx_main
+
+gx_update_scroll:
+          stz     <$35                  ; ??
+          stz     <$38                  ; ??
+          lda     <gx_scroll_x
+          sta     <vdc_scroll_x
+          lda     <gx_scroll_x+1
+          sta     <vdc_scroll_x+1
+          lda     <gx_scroll_y
+          sta     <vdc_scroll_y
+          lda     <gx_scroll_y+1
+          sta     <vdc_scroll_y+1
+          rts     
+
+gx_unknown_eb00:
+          lda     $24c0
+          sta     <$39
+          lda     $24bf
+          sta     $24c0
+          lda     #$20
+          bit     $24c1
+          bne     leb59_00
+          bmi     leb34_00
+          lda     <$39
+          cmp     $24bf
+          beq     leb1f_00
+          lda     #$c0
+          tsb     <vdc_control
+leb1f_00:
+          lda     $24c1
+          and     #$0f
+          eor     #$ff
+          sec     
+          adc     $24bf
+          sta     $24bf
+          bpl     leb6a_00
+          stz     $24bf
+          bra     leb52_00
+leb34_00:
+          lda     $24c1
+          and     #$0f
+          clc     
+          adc     $24bf
+          bcs     leb48_00
+          sta     $24bf
+          asl     A
+          cmp     $24c2
+          bcc     leb6a_00
+leb48_00:
+          lda     $24c2
+          sta     $24bf
+          lda     #$c0
+          trb     <vdc_control
+leb52_00:
+          lda     #$20
+          tsb     $24c1
+          bra     leb6a_00
+leb59_00:
+          lda     #$10
+          bit     $24c1
+          bne     leb65_00
+          tsb     $24c1
+          bra     leb6a_00
+leb65_00:
+          lda     #$40
+          trb     $24c1
+leb6a_00:
+          st0     #$08
+          lda     <vdc_scroll_y
+          clc     
+          adc     <$39
+          sta     video_data_l
+          lda     <vdc_scroll_y+1
+          bcc     leb79_00
+          inc     A
+leb79_00:
+          sta     video_data_h
+          st0     #$0c
+          lda     $24c6
+          sta     video_data_l
+          lda     $24c7
+          clc     
+          adc     <$39
+          sta     video_data_h
+          st0     #$0d
+          lda     $24c2
+          lsr     A
+          sbc     <$39
+          asl     A
+          sta     video_data_l
+          st0     #$0e
+          lda     $24c4
+          clc     
+          adc     <$39
+          sta     video_data_l
+          rts     
+
+gx_irq_1:
+          bbr0    <irq_m, @gx_irq1
+          jmp     [irq1_user_hook]
+@gx_irq1:
+          pha     
+          phx     
+          phy     
+          lda     video_reg_l
+          sta     <vdc_status
+          bit     #$08                          ; test for VRAM to SATB transfer end
+          beq     @check_spr_or
+          lda     $204a
+          and     #$01
+          clc     
+          adc     #$08
+          st0     #$13                          ; set VRAM SATB source address
+          st1     #$00
+          sta     video_data_h
+          lda     <vdc_status
+@check_spr_or:
+          bit     #$02                          ; test for sprites overflow 
+          beq     @check_vsync
+          inc     $2049                         ; ?!
+          lda     <vdc_control
+          and     #$fd                          ; disable sprite overflow interrupt
+          sta     <vdc_control
+          st0     #$05
+          sta     video_data_l
+          lda     <vdc_status
+@check_vsync:
+          bit     #$20                          ; test for vsync
+          bne     @vsync
+          jmp     lec5a_00
+@vsync:
+          lda     <$35
+          sta     <$37
+          bne     lec24_00
+          st0     #$06                          ; set raster counter to 0 (no hsync?)
+          st1     #$00
+          st2     #$00
+          st0     #$07                          ; set X scroll
+          lda     <vdc_scroll_x
+          sta     video_data_l
+          lda     <vdc_scroll_x+1
+          sta     video_data_h
+          bit     $24c1                         ; ??
+          bvc     lec05_00
+          jsr     gx_unknown_eb00
+          bra     @update_scroll
+@scroll_y:
+          st0     #$08                          ; set Y scroll
+          lda     <vdc_scroll_y
+          sta     video_data_l
+          lda     <vdc_scroll_y+1
+          sta     video_data_h
+@update_scroll:
+          lda     <gx_scroll_x
+          sta     <vdc_scroll_x
+          lda     <gx_scroll_x+1
+          sta     <vdc_scroll_x+1
+          lda     <gx_scroll_y
+          sta     <vdc_scroll_y
+          lda     <gx_scroll_y+1
+          sta     <vdc_scroll_y+1
+          jmp     lec2d_00
+lec24_00:
+          lda     <$34
+          sta     <$36
+          stz     <$38
+          jsr     gx_unknown_ec6f
+lec2d_00:
+          st0     #$05
+          lda     <vdc_control
+          ora     #$02                          ; enable sprite overflow interrupt
+          sta     video_data_l
+          inc     <$33
+          lda     <vdc_reg
+          sta     video_reg_l
+          jsr     lf27a_00
+          jsr     lef41_00
+          ldx     $22bd
+          lda     $228b, X
+          bit     #$80
+          bne     lec6b_00
+          lda     $22be
+          bit     #$01
+          bne     lec6b_00
+          ply     
+          plx     
+          pla     
+          jmp     gx_unknown_ea19
+lec5a_00:
+          lda     <$37
+          beq     lec66_00
+          ldx     #$0f
+lec60_00:
+          dex     
+          bpl     lec60_00
+          jsr     gx_unknown_ec6f
+lec66_00:
+          lda     <vdc_reg
+          sta     video_reg_l
+lec6b_00:
+          ply     
+          plx     
+          pla     
+          rti     
+
+gx_unknown_ec6f:
+          ldy     <$38
+          lda     [$36], Y
+          bmi     lec90_00
+          beq     lece1_00
+          dec     A
+          beq     leccf_00
+          dec     A
+          beq     lecbd_00
+          dec     A
+          beq     lec91_00
+          iny     
+          lda     <vdc_control
+          and     [$36], Y
+          iny     
+          ora     [$36], Y
+          st0     #$05
+          sta     video_data_l
+          jmp     lece1_00
+lec90_00:
+          rts     
+lec91_00:
+          iny     
+          st0     #$07
+          lda     <vdc_scroll_x
+          sta     video_data_l
+          lda     <vdc_scroll_x+1
+          sta     video_data_h
+          st0     #$08
+          lda     <vdc_scroll_y
+          sta     video_data_l
+          lda     <vdc_scroll_y+1
+          sta     video_data_h
+          lda     <gx_scroll_x
+          sta     <vdc_scroll_x
+          lda     <gx_scroll_x+1
+          sta     <vdc_scroll_x+1
+          lda     <gx_scroll_y
+          sta     <vdc_scroll_y
+          lda     <gx_scroll_y+1
+          sta     <vdc_scroll_y+1
+          jmp     lecf2_00
+lecbd_00:
+          iny     
+          lda     [$36], Y
+          iny     
+          st0     #$08
+          sta     video_data_l
+          lda     [$36], Y
+          iny     
+          sta     video_data_h
+          jmp     lecf2_00
+leccf_00:
+          iny     
+          lda     [$36], Y
+          iny     
+          st0     #$07
+          sta     video_data_l
+          lda     [$36], Y
+          iny     
+          sta     video_data_h
+          jmp     lecf2_00
+lece1_00:
+          iny     
+          lda     [$36], Y
+          iny     
+          st0     #$07
+          sta     video_data_l
+          lda     [$36], Y
+          sta     video_data_h
+          jmp     lecbd_00
+lecf2_00:
+          lda     [$36], Y
+          iny     
+          st0     #$06
+          sta     video_data_l
+          lda     [$36], Y
+          iny     
+          sta     video_data_h
+          sty     <$38
+          rts     
+
+	.code
+	.bank $000
+	.org $ed03
+gx_unknown_ed03:
+          stz     $22c6
+          rts     
+
+	.code
+	.bank $000
+	.org $ed15
+; $3a   : data address LSB
+; $3b   : data address MSB
+; $22c7 : data bank
+; $22c1 : VRAM offset LSB
+; $22c2 : VRAM offset MSB
+gx_vdc_load_vram:
+          lda     <$3b                      ; adjust data address and bank
+led17_00:
+          cmp     #$60
+          bcc     led22_00
+          sbc     #$20
+          inc     $22c7
+          bra     led17_00
+led22_00:
+          sta     <$3b
+          stz     $22c0
+          lda     #$05                      ; VDC control register
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     <vdc_control+1
+          and     #$e7                      ; set auto increment to 1
+          sta     <vdc_control+1            ; there may be an issue here
+          sta     video_data_h              ; the previous value of video_data_l will be re-used
+          lda     #$00                      ; VRAM write pointer
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     $22c1
+          sta     video_data_l
+          lda     $22c2
+          sta     video_data_h
+          lda     #$02
+          sta     <vdc_reg
+          sta     video_reg_l               ; VRAM data register
+          lda     $22c1
+          asl     A
+          sta     $22c3
+          lda     $22c2
+          rol     A
+          sta     $22c4                     ; 22c3.w = 22c1.w << 1
+          tma     #$02                      ; save mpr 2
+          sta     $22c8
+          tma     #$03                      ; save mpr 3
+          sta     $22c9
+          lda     $22c7                     ; map data bank
+          tam     #$02
+          inc     A
+          tam     #$03
+          lda     [$3a]                     ; 
+          sta     $22c6
+          inc     <$3a                      ; next data byte
+          bne     led7c_00
+          inc     <$3b
+led7c_00:
+          clx     
+          bra     ledcb_00
+          lda     $22c6
+          bne     led85_00
+          rts     
+led85_00:
+          lda     #$05
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     <vdc_control+1
+          and     #$e7
+          sta     <vdc_control+1
+          sta     video_data_h
+          lda     #$00
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     $22c1
+          sta     video_data_l
+          lda     $22c2
+          sta     video_data_h
+          lda     #$02
+          sta     <vdc_reg
+          sta     video_reg_l
+          tma     #$02
+          sta     $22c8
+          tma     #$03
+          sta     $22c9
+          lda     $22c7
+          tam     #$02
+          inc     A
+          tam     #$03
+          ldx     $22c0
+          beq     ledcb_00
+          lda     <$3f
+          sta     video_data_l
+ledcb_00:
+          lda     <$3b
+          cmp     #$60
+          bcc     leddc_00
+          sbc     #$20
+          sta     <$3b
+          tma     #$03
+          tam     #$02
+          inc     A
+          tam     #$03
+leddc_00:
+          lda     [$3a]
+          cmp     #$ff
+          beq     leded_00
+          bit     #$80
+          beq     lee1e_00
+          bit     #$40
+          beq     lee51_00
+          jmp     gx_vdc_write
+leded_00:
+          dec     $22c6
+          lda     $22c4
+          lsr     A
+          sta     $22c2
+          lda     $22c3
+          ror     A
+          sta     $22c1
+          stx     $22c0
+          clc     
+          lda     <$3a
+          adc     #$01
+          sta     <$3a
+          lda     <$3b
+          adc     #$00
+          sta     <$3b
+          tma     #$02
+          sta     $22c7
+          lda     $22c8                     ; restore mpr 2 and 3
+          tam     #$02
+          lda     $22c9
+          tam     #$03
+          rts     
+
+	.code
+	.bank $000
+	.org $eec7
+gx_vdc_write:
+          and     #$3f
+          sta     <$3e
+          asl     A
+          adc     $22c3
+          sta     $22c3
+          bcc     @loop
+          inc     $22c4
+@loop:
+          ldy     #$01
+          lda     [$3a], Y
+          sta     video_data_l, X
+          txa     
+          eor     #$01
+          tax     
+          iny     
+          lda     [$3a], Y
+          sta     video_data_l, X
+          sax     
+          eor     #$01
+          sax     
+          dec     <$3e
+          bne     @loop
+          sta     <$3f
+          clc     
+          lda     <$3a
+          adc     #$03
+          sta     <$3a
+          lda     <$3b
+          adc     #$00
+          sta     <$3b
+          jmp     ledcb_00
+
+	.code
+	.bank $000
+	.org $efc9
+gx_display_init:
+          stz     <gx_scroll_x
+          stz     <gx_scroll_x+1
+          stz     <gx_scroll_y
+          stz     <gx_scroll_y+1
+          sta     <$42
+          lsr     A
+          lsr     A
+          lsr     A
+          sta     <$43
+          stz     <$11
+          stz     $2303
+          stz     $2302
+          jsr     gx_vce_init
+          jsr     gx_vdc_init
+          stz     $24bf
+          stz     $24c0
+          rts     
+
+gx_vdc_init:
+          lda     gx_vdc_init_table+1
+          sta     <vdc_control
+          lda     gx_vdc_init_table+2
+          sta     <vdc_control+1
+          lda     #low(gx_vdc_init_table)
+          sta     <$00
+          lda     #high(gx_vdc_init_table)
+          sta     <$01
+          php     
+          sei     
+          ldy     #$00
+@vdc_set_reg:
+          lda     [$00], Y
+          iny     
+          sta     video_reg_l
+          lda     [$00], Y
+          iny     
+          sta     video_data_l
+          lda     [$00], Y
+          iny     
+          sta     video_data_h
+          cpy     #$1b
+          bne     @vdc_set_reg
+          lda     <$42
+          beq     @skip
+@vdc_xres_341:
+          st0     #$0a                  ; set horizontal resolution to 341px
+          st1     #$02                  ; this will work if vce dot clock is set to 7MHz
+          st2     #$05
+          st0     #$0b
+          st1     #$27
+          st2     #$04
+@skip:
+          lda     #$e8
+          jsr     gx_vdc_set_yres
+          plp     
+          rts     
+
+gx_vdc_init_table:
+          .db $05,$8e,$03
+          .db $06,$00,$00
+          .db $07,$00,$00
+          .db $08,$00,$00
+          .db $09,$40,$00               ; BAT size: 32x64
+          .db $0a,$02,$02               ; horizontal resolution: 256px
+          .db $0b,$1f,$04
+          .db $0f,$01,$00
+          .db $13,$00,$08
+
+gx_vce_init:
+          lda     <$42
+          bne     @vce_next_mode
+          lda     #$04                  ; blur edges + 5MHz dot clock
+          bra     @vce_clear
+@vce_next_mode:
+          lda     #$05                  ; blur edges + 7MHz dot clock
+@vce_clear:
+          sta     color_ctrl
+          stz     color_reg_l           ; clear all palette colors
+          stz     color_reg_h           ; well... there's only 512 color entries
+          ldx     #$04                  ; but this loops set 4*256=1024 colors to 0.
+          cly     
+@loop:
+          stz     color_data_l
+          stz     color_data_h
+          dey     
+          bne     @loop
+          dex     
+          bne     @loop
+          rts     
+
+gx_vdc_enable_display:
+          lda     #$05
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     <vdc_control
+          ora     #$c0
+          sta     <vdc_control
+          sta     video_data_l
+          rts     
+
+gx_vdc_disable_display:
+          lda     #$05
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     <vdc_control
+          and     #$3f
+          sta     <vdc_control
+          sta     video_data_l
+          rts     
+
+gx_vdc_set_ctrl_hi:
+          tax     
+          lda     #$05                      ; VDC control register
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     <vdc_control+1
+          and     #$e7                      ; Clear out r/w address auto increment
+          ora     gx_vdc_vram_auto_inc, X   ; and fetch it from a table
+          sta     <vdc_control+1
+          sta     video_data_h
+          rts     
+
+gx_vdc_vram_auto_inc:
+          .db $00,$08,$10,$18
+
+	.code
+	.bank $000
+	.org $f0e5
+gx_vdc_set_yres:
+          bit     #$01
+          beq     @l0
+          inc     A
+@l0:
+          sta     $24c2
+          stz     $24c3
+          eor     #$ff
+          inc     A
+          lsr     A
+          sta     $24c4
+          stz     $24c5
+          adc     #$08
+          sta     $24c7
+          lda     #$02
+          sta     $24c6
+          lda     #$0d                      ; Vertical Display Register
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     $24c2
+          sta     video_data_l
+          lda     $24c3
+          sta     video_data_h
+          lda     #$0c                      ; Vertical Synchro Register
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     $24c6
+          sta     video_data_l
+          lda     $24c7
+          sta     video_data_h
+          lda     #$0e                      ; Vertical Display End Position Register
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     $24c4
+          sta     video_data_l
+          lda     $24c5
+          sta     video_data_h
+          lda     #$02                      ; VRAM data register
+          sta     <vdc_reg
+          sta     video_reg_l
+          rts     
+
+	.code
+	.bank $000
+	.org $f16a
+gx_vdc_enable_interrupts:
+          lda     #$05
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     <vdc_control
+          ora     #$0c
+          sta     <vdc_control
+          sta     video_data_l
+          stz     irq_disable
+          rts     
+
+	.code
+	.bank $000
+	.org $f8a4
+gx_main:
+          jsr     gx_cd_reset
+          jsr     gx_update_scroll
+          jsr     gx_unknown_ed03
+          ldx     #$f9
+          ldy     #$7c
+          jsr     gx_unknown_e98c
+          lda     #$00
+          jsr     gx_display_init
+          jsr     gx_vdc_disable_display
+          cla     
+          jsr     gx_vdc_set_ctrl_hi
+          jsr     gx_vdc_clear_tiles
+          jsr     gx_vdc_enable_interrupts
+          cli     
+          lda     $18c1                         ; check if the game is running on a Super CDRom 2
+          cmp     #$aa
+          bne     lf8eb_00
+          lda     $18c2
+          cmp     #$55
+          bne     lf8eb_00
+          lda     #$aa                          ; this is a Super CDRom 2
+          sta     $18c0
+          lda     #$55
+          sta     $18c0
+          lda     #$68
+          sta     $2204
+          lda     #$20
+          sta     $2205
+          bra     lf8f5_00
+lf8eb_00:
+          lda     #$80                          ; this is not a Super CDRom 2
+          sta     $2204
+          lda     #$08
+          sta     $2205
+lf8f5_00:
+          lda     #$01
+          tam     #$06
+          jsr     gx_load_gfx_data
+lf8fc_00:
+          jsr     gx_cd_reset
+          jsr     gx_unknown_c07f
+          jsr     gx_adpcm_reset
+          cla     
+          jsr     le179_00
+lf909_00:
+          jsr     gx_cd_reset
+lf90c_00:
+          jsr     le245_00
+          bcc     lf918_00
+          lda     #$1e
+          jsr     le9e4_00
+          bra     lf90c_00
+lf918_00:
+          jsr     le17f_00
+          bne     lf96e_00
+          lda     $2235
+          sta     <$23
+          lda     #$02
+          sta     <$20
+          lda     #$3c
+          sta     <$21
+          lda     #$22
+          sta     <$22
+          jsr     le1a0_00
+          tst     #$04, $223f
+          bne     lf93a_00
+          jmp     lf96e_00
+lf93a_00:
+          jsr     lfe3c_00
+          bpl     lf942_00
+          jmp     lf96e_00
+lf942_00:
+          lda     #$78
+          sta     <$00
+          lda     #$f9
+          sta     <$01
+          lda     $2204
+          sta     <$21
+          jsr     lff75_00
+          cmp     #$ff
+          beq     lf96e_00
+          cmp     #$00
+          bne     lf909_00
+          jsr     gx_vdc_disable_display
+          lda     $2204
+          tam     #$03
+          inc     A
+          tam     #$04
+          inc     A
+          tam     #$05
+          inc     A
+          tam     #$06
+          jmp     l6000_00
+lf96e_00:
+          lda     #$01
+          tam     #$06
+          jsr     lc053_01
+          jmp     lf8fc_00
+
+	.code
+	.bank $000
+	.org $f989
+gx_vdc_clear_tiles:
+          stz     <$46
+          stz     <$47
+          stz     <$48
+          stz     <$49
+          stz     <$4a
+          jmp     lf996_00
+lf996_00:
+          ldx     #$0f
+          lda     #$ff
+lf99a_00:
+          sta     $2791, X
+          dex     
+          bpl     lf99a_00
+          stz     <$4b
+          stz     <$4c
+          stz     <$4d
+          lda     #$05
+          sta     vdc_reg
+          sta     video_reg_l
+          lda     vdc_control+1
+          and     #$e7
+          sta     vdc_control+1
+          sta     video_data_h
+          lda     #$00                          ; VRAM write pointer
+          sta     vdc_reg
+          sta     video_reg_l
+          st1     #$00                          ; set to past the BAT
+          st2     #$08
+          lda     #$02                          ; VRAM data register
+          sta     vdc_reg
+          sta     video_reg_l
+          ldx     #$80                          
+          ldx     #$00                          ; clear 256 tiles
+@loop:
+          st1     #$00
+          st2     #$00
+          st1     #$00
+          st2     #$00
+          st1     #$00
+          st2     #$00
+          st1     #$00
+          st2     #$00
+          dex     
+          bne     @loop
+          rts     
+
+	.data
+	.bank $000
+	.org $fff6
+irq_vectors:
+          .dw $eaa3
+          .dw $eba5
+          .dw $ea9c
+          .dw $ea9b
+          .dw $eab3
+
+	.code
+	.bank $001
+	.org $c000
+gx_load_gfx_data:
+          jsr     gx_vdc_disable_display
+          stz     <gx_scroll_x
+          stz     <gx_scroll_x+1
+          stz     <gx_scroll_y
+          stz     <gx_scroll_y+1
+          stz     color_reg_l                           ; upload complete palette (all 512 colors)
+          stz     color_reg_h
+          tia     gx_pal_00, color_data_l, $0400
+          cla     
+          jsr     gx_vdc_set_ctrl_hi                    ; set vram r/w auto increment to 1
+          lda     #$00                                  ; VRAM write pointer set to $0000 (BAT)
+          sta     <vdc_reg
+          sta     video_reg_l
+          st1     #$00
+          st2     #$00
+          lda     #$02                                  ; copy the whole BAT
+          sta     <vdc_reg
+          sta     video_reg_l
+          tia     gx_bat_00, video_data_l, $0800
+          lda     #$01
+          sta     $22c7
+          lda     #$00
+          sta     $22c1
+          lda     #$10
+          sta     $22c2
+          lda     #$5f
+          sta     <$3a
+          lda     #$4d
+          sta     <$3b
+          jsr     gx_vdc_load_vram
+          jsr     gx_vdc_enable_display
+          rts     
+
+	.code
+	.bank $001
+	.org $c07f
+gx_unknown_c07f:
+          ldx     #$c0
+          ldy     #$99
+          jsr     gx_unknown_e98c
+          pha     
+lc087_01:
+          jsr     le9e2_00
+          lda     $22d8
+          and     #$08
+          beq     lc087_01
+          plx     
+          jsr     le9d7_00
+          jsr     lf996_00
+          rts     
+

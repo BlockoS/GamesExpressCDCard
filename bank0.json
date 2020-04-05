@@ -1,0 +1,252 @@
+{
+    "gx_unknown_c07f": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 1,
+        "logical": "c07f",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_adpcm_reset": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e794",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_irq_2_unknown": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e865",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_eb00": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "eb00",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_vdc_write": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "eec7",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_vdc_load_vram": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "ed15",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_vdc_enable_display": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f06e",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_cd_wait": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e267",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_update_scroll": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "eaeb",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_ec6f": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "ec6f",
+        "size": "94",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_ed03": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "ed03",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_e98c": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e98c",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_e903": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e903",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_ea19": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "ea19",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_display_init": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "efc9",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_vdc_vram_auto_inc": {
+        "filename": "games_express.asm",
+        "type": "data",
+        "page": 0,
+        "logical" :"f0a5",
+        "size": "4",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "hex", "element_size": 1, "elements_per_line": 8 }
+    },
+    "gx_vdc_clear_tiles": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f989",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_vdc_enable_interrupts": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f16a",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_vdc_set_yres": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f0e5",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_vdc_disable_display": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f07f",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_vdc_set_ctrl_hi": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f090",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_vce_init": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f04b",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_vdc_init_table": {
+        "filename": "games_express.asm",
+        "type": "data",
+        "page": 0,
+        "logical" :"f030",
+        "size": "1b",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "hex", "element_size": 1, "elements_per_line": 3 }
+    },
+    "gx_vdc_init": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "efed",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_main": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f8a4",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_cd_reset": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e22a",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_irq_1": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "eba5",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_irq_2": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "eaa3",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_irq_nmi": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "ea9b",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_irq_reset": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "eab3",
+        "size": "38",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_irq_vectors": {
+        "filename": "games_express.asm",
+        "type": "data",
+        "page": 0,
+        "logical" :"fff6",
+        "size": "a",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "hex", "element_size": 2, "elements_per_line": 1 }
+    },
+    "gx_load_gfx_data": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 1,
+        "logical": "c000",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_pal_00": {
+        "filename": "gx_pal_00.bin",
+        "type": "data",
+        "page": 1,
+        "logical": "c15f",
+        "size": "400",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "binary", "element_size": 2, "elements_per_line": 16 }
+    },
+    "gx_bat_00": {
+        "filename": "gfx_bat_00.bin",
+        "type": "data",
+        "page": 1,
+        "logical": "c55f",
+        "size": "800",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "binary", "element_size": 2, "elements_per_line": 16 }
+    }
+}
