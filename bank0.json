@@ -1,9 +1,84 @@
 {
-    "gx_unknown_c07f": {
+    "gx_write_cd_fade_timer": {
         "filename": "games_express.asm",
         "type": "code",
-        "page": 1,
-        "logical": "c07f",
+        "page": 0,
+        "logical": "e179",
+        "size": "1c1",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    
+    "gx_unknown_e4cd": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e4cd",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+
+    "gx_unknown_e513": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e513",
+        "size": "ba",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+
+    "gx_unknown_e9d7": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e9d7",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_e9e2": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e9e2",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_e9e4": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "e9e4",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_ef41": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "ef41",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_f27a": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f27a",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_f996": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f996",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_fe3c": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "fe3c",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_ff75": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "ff75",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
     "gx_adpcm_reset": {
@@ -46,13 +121,6 @@
         "type": "code",
         "page": 0,
         "logical": "f06e",
-        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
-    },
-    "gx_cd_wait": {
-        "filename": "games_express.asm",
-        "type": "code",
-        "page": 0,
-        "logical": "e267",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
     "gx_update_scroll": {
@@ -179,13 +247,6 @@
         "logical": "f8a4",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
-    "gx_cd_reset": {
-        "filename": "games_express.asm",
-        "type": "code",
-        "page": 0,
-        "logical": "e22a",
-        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
-    },
     "gx_irq_1": {
         "filename": "games_express.asm",
         "type": "code",
@@ -229,6 +290,20 @@
         "type": "code",
         "page": 1,
         "logical": "c000",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_c053": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 1,
+        "logical": "c053",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+    "gx_unknown_c07f": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 1,
+        "logical": "c07f",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
     "gx_pal_00": {
