@@ -516,10 +516,11 @@ le9a3_00:
           trb     $22be                     ; does this mean that 22be is some kind of lock?
           txa     
           rts     
-
-	.code
-	.bank $000
-	.org $e9d7
+le9cc_00:
+          ldx     $22bd
+          lda     #$00
+          sta     $228b, X
+          jmp     lea55_00
 gx_unknown_e9d7:
           cpx     $22bd
           beq     le9cc_00
@@ -588,6 +589,7 @@ lea41_00:
 lea52_00:
           dex     
           bpl     lea41_00
+lea55_00:
           lda     #$01
           tsb     $22be
 lea5a_00:
@@ -1407,7 +1409,6 @@ gx_vce_init:
           dex     
           bne     @loop
           rts     
-
 gx_vdc_enable_display:
           lda     #$05
           sta     <vdc_reg
@@ -1417,7 +1418,6 @@ gx_vdc_enable_display:
           sta     <vdc_control
           sta     video_data_l
           rts     
-
 gx_vdc_disable_display:
           lda     #$05
           sta     <vdc_reg
@@ -1427,7 +1427,6 @@ gx_vdc_disable_display:
           sta     <vdc_control
           sta     video_data_l
           rts     
-
 gx_vdc_set_ctrl_hi:
           tax     
           lda     #$05                      ; VDC control register
@@ -1653,66 +1652,6 @@ lf99a_00:
           st2     #$00
           dex     
           bne     @loop
-          rts     
-
-          stz     <$06
-          stz     <$07
-          stz     <$08
-          stz     <$09
-lf9ed_00:
-          cmp     #$10
-          bcc     lf9f5_00
-          lsr     A
-          jmp     lf9ed_00
-lf9f5_00:
-          tax     
-          lda     $2791, X
-          bpl     lfa14_00
-          lda     $2790
-          cmp     #$40
-          bcs     lfa61_00
-          sta     $27a1, X
-          sta     $2791, X
-          tay     
-          lda     #$ff
-          sta     $2750, Y
-          sta     $2710, Y
-          jmp     lfa2b_00
-lfa14_00:
-          tay     
-          lda     $2790
-          cmp     #$40
-          bcs     lfa61_00
-          sta     $2710, Y
-          sta     $2791, X
-          say     
-          sta     $2750, Y
-          lda     #$ff
-          sta     $2710, Y
-lfa2b_00:
-          lda     <$08
-          sec     
-          sbc     $24bf
-          sta     $24d0, Y
-          lda     <$09
-          sbc     #$00
-          sta     $2510, Y
-          lda     <$06
-          sta     $2550, Y
-          lda     <$07
-          sta     $2590, Y
-          lda     <$46
-          sta     $25d0, Y
-          lda     <$47
-          sta     $2610, Y
-          lda     <$48
-          sta     $2650, Y
-          lda     <$00
-          sta     $2690, Y
-          lda     <$01
-          sta     $26d0, Y
-          inc     $2790
-lfa61_00:
           rts     
 
 	.code

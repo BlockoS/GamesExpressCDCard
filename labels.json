@@ -20,7 +20,6 @@
     { "name": "irq_1", "logical": "e870", "page": "00" },
     
     { "name": "gx_unknown_e903", "logical": "e903", "page": "00" },
-    { "name": "gx_unknown_e98c", "logical": "e98c", "page": "00" },
     { "name": "gx_unknown_e9e2", "logical": "e9e2", "page": "00" },
     { "name": "gx_unknown_e9e4", "logical": "e9e4", "page": "00" },
     { "name": "gx_unknown_e9d7", "logical": "e9d7", "page": "00" },
@@ -54,9 +53,16 @@
     { "name": "@vce_next_mode", "logical": "f053", "page": "00" },
     { "name": "@vce_clear", "logical": "f055", "page": "00" },
     { "name": "@loop", "logical": "f061", "page": "00" },
+    { "name": "gx_vdc_enable_display", "logical": "f06e", "page": "00" },
+    { "name": "gx_vdc_disable_display", "logical": "f07f", "page": "00" },
+    { "name": "gx_vdc_set_ctrl_hi", "logical": "f090", "page": "00" },
+    
     { "name": "@l0", "logical": "f0ea", "page": "00" },
     { "name": "gx_unknown_f27a", "logical": "f27a", "page": "00" },
+    { "name": "gx_unknown_f996", "logical": "f996", "page": "00" },
+
     { "name": "@loop", "logical": "f9d1", "page":"00"},
+
     { "name": "irq_vectors", "logical": "fff6", "page": "00" },
     { "name": "video_reg_l", "logical": "0000", "page": "ff" },
     { "name": "video_reg_h", "logical": "0001", "page": "ff" },
