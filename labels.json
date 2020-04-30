@@ -120,5 +120,6 @@
     { "name": "vdc_scroll_y", "logical": "202c", "page": "f8" },
     { "name": "vdc_scroll_y+1", "logical": "202d", "page": "f8" },
     { "name": "irq1_user_hook", "logical": "2200", "page": "f8"},
-    { "name": "irq2_user_hook", "logical": "2202", "page": "f8"}
+    { "name": "irq2_user_hook", "logical": "2202", "page": "f8"},
+    { "name": "irqnmi_user_hook", "logical": "2263", "page": "f8"}
 ]

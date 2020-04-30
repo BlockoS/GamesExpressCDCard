@@ -94,6 +94,17 @@
         "logical": "f8a4",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
+    
+    "___f97c": {
+        "filename": "games_express.asm",
+        "type": "data",
+        "page": 0,
+        "logical": "f97c",
+        "size": "8",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "hex", "element_size": 1, "elements_per_line": 4 }
+    },
+
     "gx_vdc_clear_tiles": {
         "filename": "games_express.asm",
         "type": "code",

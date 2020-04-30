@@ -376,18 +376,18 @@ gx_adpcm_reset:
 gx_irq_2_unknown:
           lda     cd_control
           and     bram_lock 
-          ora     <$19
+          ora     <$19                      ; 2019 contains a copy of cd_control
           sta     <$19
           bbr2    <$19, le87c_00
-          lda     #$04
-          trb     cd_control 
+          lda     #$04                      ; bit 2 is set : adpcm sample playback in progress
+          trb     cd_control                ; reset bit 3 of cd_control
           lda     #$04
           trb     <$19
           cli     
 le87c_00:
           bbr5    <$19, le8d9_00
-          lda     #$20
-          trb     cd_control
+          lda     #$20                      ; bit 5 is set: ?
+          trb     cd_control                ; clear bit 5
           lda     #$20
           trb     <$19
           cli     
@@ -400,7 +400,7 @@ le891_00:
           lda     #$80
           tsb     cd_control
 le89c_00:
-          tst     #$40, $1800
+          tst     #$40, cd_status
           bne     le89c_00
           php     
           sei     
@@ -478,6 +478,14 @@ le922_00:
           sta     $228b
           plp     
           rts     
+    ; at the end we have
+    ; 228b 81 00 00 00 00 00 some flag
+    ; 22a4 __ __ __ __ 20    stack offset
+    ; 22a9 __ __ __ __ __    P register
+    ; 22ae __ __ __ __ 68    PC LSB
+    ; 22b3 __ __ __ __ ea    PC MSB
+    ; 22b8 80 00 00 00 04 00 
+    ; this may be some thread/process list
 
 	.code
 	.bank $000
@@ -612,17 +620,17 @@ lea6b_00:
           sta     $228b, X
           lda     $229f, X
           tay     
-          lda     $22a4, X
+          lda     $22a4, X          ; 22a4 : stack offset
           sax     
           txs     
           sax     
-          lda     $22b3, X
+          lda     $22b3, X          ; return address MSB
           pha     
-          lda     $22ae, X
+          lda     $22ae, X          ; return address LSB
           pha     
-          lda     $22a9, X
+          lda     $22a9, X          ; P register
           pha     
-          lda     $229a, X
+          lda     $229a, X          ; future X reg
           pha     
           sei     
           lda     #$01
@@ -633,7 +641,7 @@ lea6b_00:
 gx_irq_nmi:
           rti     
           bbr2    <irq_m, leaa2_00
-          jmp     [$2263]
+          jmp     [irqnmi_user_hook]
 leaa2_00:
           rti     
 gx_irq_2:
@@ -698,7 +706,7 @@ gx_unknown_eb00:
           lda     <$39
           cmp     $24bf
           beq     leb1f_00
-          lda     #$c0
+          lda     #$c0                  ; enable display (background and sprites)
           tsb     <vdc_control
 leb1f_00:
           lda     $24c1
@@ -723,7 +731,7 @@ leb34_00:
 leb48_00:
           lda     $24c2
           sta     $24bf
-          lda     #$c0
+          lda     #$c0                  ; disable display.
           trb     <vdc_control
 leb52_00:
           lda     #$20
@@ -749,14 +757,14 @@ leb6a_00:
           inc     A
 leb79_00:
           sta     video_data_h
-          st0     #$0c
+          st0     #$0c                      ; vertical synchro register
           lda     $24c6
           sta     video_data_l
           lda     $24c7
           clc     
           adc     <$39
           sta     video_data_h
-          st0     #$0d
+          st0     #$0d                      ; vertical display register
           lda     $24c2
           lsr     A
           sbc     <$39
@@ -875,25 +883,25 @@ lec6b_00:
           plx     
           pla     
           rti     
-gx_unknown_ec6f:
-          ldy     <$38
-          lda     [$36], Y
-          bmi     lec90_00
-          beq     lece1_00
+gx_unknown_ec6f:                        ; [todo] hsync process
+          ldy     <$38                  ; $2038 => current hsync op         [todo] where $2036-$2038 are set?
+          lda     [$36], Y              ; $2036 => hsync op
+          bmi     lec90_00              ; $80 => end
+          beq     lece1_00              ; 0 =>  set X and Y scroll register  (values taken from hsync op)
           dec     A
-          beq     leccf_00
+          beq     leccf_00              ; 1 => set X scroll register only  (values taken from hsync op)
           dec     A
-          beq     lecbd_00
+          beq     lecbd_00              ; 2 => set Y scroll register only (values taken from hsync op)
           dec     A
-          beq     lec91_00
+          beq     lec91_00              ; 3 => set X and Y scroll register
           iny     
-          lda     <vdc_control
+          lda     <vdc_control          ; other => set control register
           and     [$36], Y
           iny     
           ora     [$36], Y
           st0     #$05
           sta     video_data_l
-          jmp     lece1_00
+          jmp     lece1_00              ; set X and Y scroll register (same as 0)
 lec90_00:
           rts     
 lec91_00:
@@ -916,8 +924,8 @@ lec91_00:
           sta     <vdc_scroll_y
           lda     <gx_scroll_y+1
           sta     <vdc_scroll_y+1
-          jmp     lecf2_00
-lecbd_00:
+          jmp     lecf2_00              ; set next rcr
+lecbd_00:                               ; set Y scroll register
           iny     
           lda     [$36], Y
           iny     
@@ -926,7 +934,7 @@ lecbd_00:
           lda     [$36], Y
           iny     
           sta     video_data_h
-          jmp     lecf2_00
+          jmp     lecf2_00              ; set next RCR
 leccf_00:
           iny     
           lda     [$36], Y
@@ -937,7 +945,7 @@ leccf_00:
           iny     
           sta     video_data_h
           jmp     lecf2_00
-lece1_00:
+lece1_00:                               ; set X scroll register
           iny     
           lda     [$36], Y
           iny     
@@ -945,16 +953,16 @@ lece1_00:
           sta     video_data_l
           lda     [$36], Y
           sta     video_data_h
-          jmp     lecbd_00
+          jmp     lecbd_00              ; then set Y scroll register
 lecf2_00:
           lda     [$36], Y
           iny     
-          st0     #$06
+          st0     #$06                  ; set next rcr
           sta     video_data_l
           lda     [$36], Y
           iny     
           sta     video_data_h
-          sty     <$38
+          sty     <$38                  ; save index
           rts     
 gx_unknown_ed03:
           stz     $22c6
@@ -1510,7 +1518,7 @@ gx_main:
           jsr     gx_unknown_ed03
           ldx     #$f9
           ldy     #$7c
-          jsr     gx_unknown_e98c
+          jsr     gx_unknown_e98c               ; [todo] load process list?
           lda     #$00
           jsr     gx_display_init
           jsr     gx_vdc_disable_display
@@ -1869,7 +1877,7 @@ lc05e_01:
 gx_unknown_c07f:
           ldx     #$c0
           ldy     #$99
-          jsr     gx_unknown_e98c
+          jsr     gx_unknown_e98c  ; [todo] load process list?
           pha     
 lc087_01:
           jsr     gx_unknown_e9e2
