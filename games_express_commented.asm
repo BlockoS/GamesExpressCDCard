@@ -683,8 +683,8 @@ leae1_00:
           jsr     gx_unknown_e903
           jmp     gx_main
 gx_update_scroll:
-          stz     <$35                  ; ??
-          stz     <$38                  ; ??
+          stz     <$35                  ; reset scroll window MSB [todo]
+          stz     <$38                  ; reset scroll window index
           lda     <gx_scroll_x
           sta     <vdc_scroll_x
           lda     <gx_scroll_x+1
@@ -811,8 +811,8 @@ gx_irq_1:
           jmp     lec5a_00
 @vsync:
           lda     <$35
-          sta     <$37
-          bne     lec24_00
+          sta     <$37                          ; [todo] scroll window data pointer MSB
+          bne     lec24_00                      ; if != 0 => scroll window update else set scroll from "global" values
           st0     #$06                          ; set raster counter to 0 (no hsync?)
           st1     #$00
           st2     #$00
@@ -843,8 +843,8 @@ gx_irq_1:
           jmp     lec2d_00
 lec24_00:
           lda     <$34
-          sta     <$36
-          stz     <$38
+          sta     <$36                          ; set scroll data pointer LSB
+          stz     <$38                          ; reset scroll window index
           jsr     gx_unknown_ec6f
 lec2d_00:
           st0     #$05
