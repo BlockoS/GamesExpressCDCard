@@ -373,20 +373,20 @@ gx_adpcm_reset:
 	.code
 	.bank $000
 	.org $e865
-gx_irq_2_unknown:
+gx_irq_2_unknown:                           ; cd irq
           lda     cd_control
           and     bram_lock 
           ora     <$19                      ; 2019 contains a copy of cd_control
           sta     <$19
           bbr2    <$19, le87c_00
-          lda     #$04                      ; bit 2 is set : adpcm sample playback in progress
+          lda     #$04                      ; bit 2 is set : adpcm sample playback in progress / half end
           trb     cd_control                ; reset bit 3 of cd_control
           lda     #$04
           trb     <$19
           cli     
 le87c_00:
           bbr5    <$19, le8d9_00
-          lda     #$20                      ; bit 5 is set: ?
+          lda     #$20                      ; bit 5 is set: data transfer done?
           trb     cd_control                ; clear bit 5
           lda     #$20
           trb     <$19
@@ -416,12 +416,12 @@ le8a9_00:
           tsb     cd_control
           plp     
 le8bb_00:
-          tst     #$40, $1800
+          tst     #$40, cd_status
           bne     le8bb_00
           lda     #$80
           trb     cd_control
 le8c6_00:
-          tst     #$80, $1800
+          tst     #$80, cd_status
           bne     le8c6_00
           lda     $2206
           beq     le8d9_00
@@ -430,7 +430,7 @@ le8c6_00:
           tsb     cd_control
 le8d9_00:
           bbr4    <$19, le8f1_00
-          lda     #$10
+          lda     #$10                              ; subchannel fifo something ?
           trb     cd_control
           lda     #$10
           trb     <$19
@@ -440,7 +440,7 @@ le8d9_00:
           lda     #$10
           tsb     cd_control
 le8f1_00:
-          bbr3    <$19, le902_00
+          bbr3    <$19, le902_00                    ; adpcm end reached
           lda     #$0c
           trb     cd_control
           lda     #$08
@@ -1258,7 +1258,7 @@ lef1e_00:
           lda     #$00
           adc     #$ff
           rts     
-gx_unknown_ef41:
+gx_unknown_ef41:                            ; [todo] read joypad
           cly     
           lda     #$01
           sta     joyport
