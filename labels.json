@@ -26,17 +26,17 @@
 
     { "name": "gx_unknown_ea19", "logical": "ea19", "page": "00" },
     { "name": "gx_irq_nmi", "logical": "ea9b", "page": "00" },
+    { "name":"gx_irq_timer", "logical": "ea9c", "page": "00" },
     { "name": "gx_irq_2", "logical": "eaa3", "page": "00" },
     { "name": "gx_irq_reset", "logical": "eab3", "page": "00" },
     { "name": "gx_update_scroll", "logical": "eaeb", "page": "00" },
+    { "name": "gx_soft_reset", "logical": "ead1", "page": "00" },
     { "name": "gx_unknown_eb00", "logical": "eb00", "page": "00" },
     { "name": "gx_irq_1", "logical": "eba5", "page": "00" },
     { "name": "gx_unknown_ec6f", "logical": "ec6f", "page": "00" },
     { "name": "gx_unknown_ed03", "logical": "ed03", "page": "00" },
     { "name": "gx_vdc_load_vram", "logical": "ed15", "page": "00" },
     { "name": "gx_vdc_write", "logical": "eec7", "page": "00" },
-    { "name": "gx_unknown_ef41", "logical": "ef41", "page": "00" },
-    { "name": "irq_reset", "logical": "e0f3", "page": "00" },
     { "name": "@vsync", "logical": "ebe3", "page": "00" },
     { "name": "@gx_irq1", "logical": "ebab", "page": "00"},
     { "name": "@check_spr_or", "logical": "ebc8", "page": "00"},
@@ -44,6 +44,10 @@
     { "name": "@scroll_y", "logical": "ec05", "page": "00"},
     { "name": "@update_scroll", "logical": "ec11", "page": "00"},
     { "name": "@loop", "logical": "eed7", "page":"00"},
+    { "name": "gx_read_joypad", "logical": "ef41", "page": "00" },
+    { "name": "@read_loop", "logical": "ef4c", "page": "00" },
+    { "name": "@check_soft_reset", "logical": "ef95", "page": "00" },
+    { "name": "@next_joypad", "logical": "efae", "page": "00" },
     { "name": "gx_display_init", "logical": "efc9", "page": "00" },
     { "name": "gx_vdc_init", "logical": "efed", "page": "00" },
     { "name": "@vdc_set_reg", "logical": "f003", "page": "00" },
@@ -121,5 +125,5 @@
     { "name": "vdc_scroll_y+1", "logical": "202d", "page": "f8" },
     { "name": "irq1_user_hook", "logical": "2200", "page": "f8"},
     { "name": "irq2_user_hook", "logical": "2202", "page": "f8"},
-    { "name": "irqnmi_user_hook", "logical": "2263", "page": "f8"}
+    { "name": "irq_timer_user_hook", "logical": "2263", "page": "f8"}
 ]

@@ -138,7 +138,7 @@ gx_unknown_e279:
           lda     #$80
           tsb     cd_control
 le27e_00:
-          lda     cd_status                 ; poll cd status while bit 4 is set
+          lda     cd_status                 ; poll cd status while bit 6 is set
           and     #$40
           bne     le27e_00
           lda     #$80
@@ -147,7 +147,7 @@ le27e_00:
 gx_unknown_e28b:
           stz     $220f
 le28e_00:
-          lda     #$81
+          lda     #$81                      ; try to send command prefix $81, $ff
           sta     cd_command
           tst     #$80, cd_status
           beq     le2c2_00
@@ -639,9 +639,10 @@ lea6b_00:
           plx     
           rti     
 gx_irq_nmi:
-          rti     
+          rti
+gx_irq_timer:     
           bbr2    <irq_m, leaa2_00
-          jmp     [irqnmi_user_hook]
+          jmp     [irq_timer_user_hook]
 leaa2_00:
           rti     
 gx_irq_2:
@@ -668,7 +669,7 @@ gx_irq_reset:
           tii     $2000, $2001, $00ff
           stz     $2200                 ; clear bss
           tii     $2200, $2201, $1dff
-lead1_00:
+gx_soft_reset:
           sei                           ; disable interrupts
           stz     timer_ctrl            ; disable CPU timer
           csh                           ; switch CPU to high speed mode
@@ -855,7 +856,7 @@ lec2d_00:
           lda     <vdc_reg
           sta     video_reg_l
           jsr     gx_unknown_f27a
-          jsr     gx_unknown_ef41
+          jsr     gx_read_joypad
           ldx     $22bd
           lda     $228b, X
           bit     #$80
@@ -1258,13 +1259,13 @@ lef1e_00:
           lda     #$00
           adc     #$ff
           rts     
-gx_unknown_ef41:                            ; [todo] read joypad
+gx_read_joypad:
           cly     
           lda     #$01
           sta     joyport
           lda     #$03
           sta     joyport
-lef4c_00:
+@read_loop:
           lda     #$01
           sta     joyport
           pha     
@@ -1299,25 +1300,26 @@ lef4c_00:
           sta     $22dd, Y
           iny     
           cpy     #$05
-          bcc     lef4c_00
+          bcc     @read_loop
           cly     
-lef95_00:
+@check_soft_reset:
           lda     $22cd
           and     $efb4, Y
-          beq     lefae_00
+          beq     @next_joypad
           lda     $22d8, Y
           cmp     #$04
-          bne     lefae_00
+          bne     @next_joypad
           lda     $22d3, Y
           cmp     #$0c
-          bne     lefae_00
-          jmp     lead1_00
-lefae_00:
+          bne     @next_joypad
+          jmp     gx_soft_reset
+@next_joypad:
           iny     
           cpy     #$05
-          bcc     lef95_00
+          bcc     @check_soft_reset
           rts     
-          ora     [$02, X]
+
+          ora     [$02, X]                              ; [todo] this looks like data
           tsb     <$08
           bpl     lefb9_00
           brk     
@@ -1327,6 +1329,7 @@ lefae_00:
           asl     <$07
           bbs7    <$ff, lefcb_00
           bbs7    <$ff, lefc8_00
+
 gx_display_init:
           stz     <gx_scroll_x
 lefcb_00:
@@ -1808,11 +1811,11 @@ lff7d_00:
 	.bank $000
 	.org $fff6
 irq_vectors:
-          .dw $eaa3
-          .dw $eba5
-          .dw $ea9c
-          .dw $ea9b
-          .dw $eab3
+          .dw gx_irq_2
+          .dw gx_irq_1
+          .dw gx_irq_timer
+          .dw gx_irq_nmi
+          .dw gx_irq_reset
 
 	.code
 	.bank $001
