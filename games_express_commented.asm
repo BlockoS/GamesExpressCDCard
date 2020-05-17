@@ -1,6 +1,10 @@
 	.code
 	.bank $000
-	.org $e179
+	.org $e114
+gx_info_string:
+          db "SYSTEM KERNEL REV 2reserv_tbl_0 1993/04/18",$0d,$0a
+          db "Created by Hack Technical Group",$0d,$0a
+          db "Special thanks to Ryo",$0d,$0a,$00,
 gx_write_cd_fade_timer:
           and     #$0f
           sta     cd_fade_timer
