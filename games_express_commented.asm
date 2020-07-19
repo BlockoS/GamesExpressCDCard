@@ -1,6 +1,100 @@
 	.code
 	.bank $000
-	.org $e114
+	.org $e000
+gx_unknown_e000:
+          jmp     gx_irq_reset
+          jmp     gx_unknown_e903
+          jmp     gx_unknown_ea19
+          jmp     gx_unknown_e9e4
+          jmp     gx_unknown_e94f
+          jmp     gx_unknown_e95b
+          jmp     gx_unknown_e98c
+          jmp     le9cc_00
+          jmp     gx_unknown_e9d7
+          jmp     gx_unknown_e9e2
+          jmp     gx_read_joypad
+          jmp     lfce4_00
+          jmp     gx_vdc_load_vram
+          jmp     gx_unknown_ed03
+          jmp     gx_unknown_ed07
+          jmp     gx_unknown_ed0b
+          jmp     lef12_00
+          jmp     lef02_00
+          jmp     gx_cd_reset
+          jmp     gx_unknown_e17f
+          jmp     gx_unknown_e1a0
+          jmp     gx_unknown_fe3c
+          jmp     gx_unknown_ff75
+          jmp     gx_write_cd_fade_timer
+          jmp     gx_unknown_e28b
+          jmp     gx_unknown_e33a
+          jmp     le6ea_00
+          jmp     le738_00
+          jmp     gx_adpcm_reset
+          jmp     le7a8_00
+          jmp     le7e7_00
+          jmp     le817_00
+          jmp     le5cd_00
+          jmp     gx_unknown_e28b
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     lfe11_00
+          jmp     lff2f_00
+          jmp     gx_vdc_clear_tiles
+          jmp     lf9e5_00
+          jmp     lf9ed_00
+          jmp     lfa62_00
+          jmp     gx_unknown_f996
+          jmp     gx_display_init
+          jmp     gx_vdc_enable_display
+          jmp     gx_vdc_disable_display
+          jmp     lf145_00
+          jmp     gx_vdc_set_ctrl_hi
+          jmp     lf194_00
+          jmp     lf22d_00
+          jmp     lf1db_00
+          jmp     lf4a4_00
+          jmp     lf4ce_00
+          jmp     lf4fa_00
+          jmp     lf518_00
+          jmp     lf49f_00
+          jmp     lf1b1_00
+          jmp     gx_vdc_enable_interrupts
+          jmp     lf17e_00
+          jmp     gx_vdc_set_yres
+          jmp     lf0a9_00
+          jmp     lf0c3_00
+          jmp     lf596_00
+          jmp     lf59e_00
+          jmp     lf5aa_00
+          jmp     lf5b7_00
+          jmp     lf5c0_00
+          jmp     lf5fa_00
+          jmp     lf622_00
+          jmp     lf6ad_00
+          jmp     lf683_00
+          jmp     lf7c7_00
+          jmp     lfb5c_00
+          jmp     lfb66_00
+          jmp     lfbc3_00
+          jmp     lfbf5_00
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+          jmp     gx_irq_reset
+
 gx_info_string:
           db "SYSTEM KERNEL REV 2reserv_tbl_0 1993/04/18",$0d,$0a
           db "Created by Hack Technical Group",$0d,$0a
@@ -243,9 +337,226 @@ le31d_00:
 le339_00:
           rts     
 
-	.code
-	.bank $000
-	.org $e4cd
+gx_unknown_e33a:
+          tii     $2020, $2207, $0008
+          jsr     gx_unknown_e25c
+          lda     #$08
+          sta     $2210
+          lda     <$27
+          sta     $2211
+          lda     <$26
+          sta     $2212
+          lda     <$25
+          sta     $2213
+          lda     <$23
+          sta     $2214
+          lda     <$20
+          cmp     #$ff
+          beq     le3b0_00
+          tma     #$06
+          pha     
+          jsr     gx_unknown_e28b
+          cmp     #$c8
+          bne     le393_00
+le36d_00:
+          lda     <$21
+          tam     #$06
+          lda     #$00
+          sta     <$15
+          lda     #$c0
+          sta     <$16
+          lda     #$00
+          sta     <$17
+          lda     #$20
+          sta     <$18
+          jsr     le40f_00
+          cmp     #$88
+          bne     le393_00
+          inc     <$21
+          lda     <$23
+          sec     
+          sbc     #$04
+          beq     le393_00
+          bpl     le36d_00
+le393_00:
+          pla     
+          tam     #$06
+          jsr     gx_unknown_e4cd
+          cmp     #$00
+          beq     le3ac_00
+          jsr     gx_unknown_e532
+          bcs     le3ac_00
+          tii     $2207, $2020, $0008
+          jmp     gx_unknown_e33a
+le3ac_00:
+          stz     $2246
+          rts     
+le3b0_00:
+          jsr     gx_unknown_e28b
+          cmp     #$c8
+          bne     le3ed_00
+          cla     
+          jsr     gx_vdc_set_ctrl_hi
+          lda     #$01
+          sta     $2246
+          lda     #$00
+          sta     vdc_reg
+          sta     video_reg_l
+          lda     <$21
+          sta     video_data_l
+          lda     <$22
+          sta     video_data_h
+          lda     #$02
+          sta     vdc_reg
+          sta     video_reg_l
+le3da_00:
+          lda     #$00
+          sta     <$17
+          lda     #$08
+          sta     <$18
+          jsr     le454_00
+          cmp     #$88
+          bne     le3ed_00
+          dec     <$23
+          bne     le3da_00
+le3ed_00:
+          jsr     gx_unknown_e4cd
+          cmp     #$00
+          beq     le3ac_00
+          jsr     gx_unknown_e532
+          bcs     le3ac_00
+          tii     $2207, $2020, $0008
+          jmp     gx_unknown_e33a
+gx_negate:
+          cla     
+          sec     
+          sbc     <$17
+          sta     <$17
+          cla     
+          sbc     <$18
+          sta     <$18
+          rts     
+; Read data from ADPCM? and store it to RAM.
+; Parameters:
+;   $2017-18 : the number of bytes to read.
+;   $2015-16 : the memory address where the read data will be stored
+;
+; Return:
+;   A : CD status
+;   X : Remaining number of 256 bytes blocs in the current sector 
+gx_adpcm_read_to_ram:
+          jsr     gx_negate     ; negates the number of bytes to read
+@start:                         
+          lda     cd_status     ; wait until cdrom is ready
+          and     #$f8
+          sta     $222f
+          cmp     #$c8
+          beq     @ok           ; data can be read
+          cmp     #$d8
+          beq     @end          ; cd is unavailable
+          jmp     @start
+@ok:
+          lda     <$15
+          ora     <$16          ; is this some write overflow test?
+          beq     @end
+          ldx     #$02
+@wait:                          ; wait ...
+          nop     
+          dex     
+          bne     @wait
+          cly     
+          ldx     #$08          ; you can't read more than 8*256 bytes (a whole sector)
+@loop:
+          lda     adpcm_addr_l
+          sta     [$15], Y
+          inc     <$17          ; check if we read all the requested number of bytes
+          bne     @next
+          inc     <$18
+          beq     @end
+@next:
+          iny     
+          bne     @loop
+          inc     <$16         ; we wrote 256 bytes, so we increase the MSB of the output pointer
+          dex                  ; check if we read a whole sector
+          bne     @loop
+          bra     @start
+@end:
+          lda     cd_status
+          and     #$f8
+          sta     $222f
+          rts     
+; Same as gx_adpcm_read_to_ram but the read bytes are transfered to the VDC.
+; Note that the VDC write register must have been set beforehand.
+gx_adpcm_read_to_vdc:
+          jsr     gx_negate
+@start:
+          lda     cd_status
+          and     #$f8
+          sta     $222f
+          cmp     #$c8
+          beq     @ok
+          cmp     #$d8
+          beq     @end
+          jmp     @start
+@ok:
+          ldx     #$02
+@wait:
+          nop     
+          dex     
+          bne     @wait
+          cly     
+@loop:
+          lda     adpcm_addr_l
+          sta     video_data_l, Y
+          say     
+          inc     A
+          and     #$01
+          say     
+          inc     <$17
+          bne     @loop
+          inc     <$18
+          beq     @end
+          bra     @loop
+@end:
+          lda     cd_status
+          and     #$f8
+          sta     $222f
+          rts     
+          cla     
+          sec     
+          sbc     <$17
+          sta     <$17
+          cla     
+          sbc     <$18
+          sta     <$18
+le49a_00:
+          lda     cd_status
+          and     #$f8
+          sta     $222f
+          cmp     #$c8
+          beq     le4ad_00
+          cmp     #$d8
+          beq     le4c4_00
+          jmp     le49a_00
+le4ad_00:
+          cly     
+          lda     cd_command
+          sta     [$15], Y
+          jsr     gx_unknown_e279
+          inc     <$15
+          bne     le4bc_00
+          inc     <$16
+le4bc_00:
+          inc     <$17
+          bne     le49a_00
+          inc     <$18
+          bne     le49a_00
+le4c4_00:
+          lda     cd_status
+          and     #$b8
+          sta     $222f
+          rts     
+
 gx_unknown_e4cd:
           lda     $220f
           beq     le4db_00
@@ -493,7 +804,37 @@ le922_00:
 
 	.code
 	.bank $000
-	.org $e98c
+	.org $e94f
+gx_unknown_e94f:
+          php     
+          sei     
+          stz     $2290, X
+          lda     #$04
+          sta     $228b, X
+          plp     
+          rts     
+gx_unknown_e95b:
+          lda     #$01
+          tsb     $22be
+          stx     <$29
+          sty     <$28
+          ldx     $22bd
+          ldy     #$01
+          lda     [$28]
+          sta     $22ae, X
+          lda     [$28], Y
+          sta     $22b3, X
+          iny     
+          lda     [$28], Y
+          sta     $22a4, X
+          iny     
+          lda     [$28], Y
+          sta     $22b8, X
+          lda     #$00
+          sta     $22a9, X
+          lda     #$04
+          sta     $228b, X
+          jmp     lea5a_00
 gx_unknown_e98c:                            ; parameters: X, Y => source pointer
           lda     #$01                      ; set bit #1
           tsb     $22be
@@ -795,7 +1136,7 @@ gx_irq_1:
           lda     $204a
           and     #$01
           clc     
-          adc     #$08
+          adc     #$08                          ; the source address ping/pong betweens $0800 and $0900
           st0     #$13                          ; set VRAM SATB source address
           st1     #$00
           sta     video_data_h
@@ -972,8 +1313,10 @@ lecf2_00:
 gx_unknown_ed03:
           stz     $22c6
           rts     
+gx_unknown_ed07:
           lda     $22c6
           rts     
+gx_unknown_ed0b:
           lda     $22c6
           bne     led11_00
           rts     
@@ -1232,6 +1575,7 @@ gx_vdc_write:
           adc     #$00
           sta     <$3b
           jmp     ledcb_00
+lef02_00:
           lda     #$40
           sta     $22ca
           lda     #$5e
@@ -1239,6 +1583,7 @@ gx_vdc_write:
           lda     #$80
           sta     $22cc
           rts     
+lef12_00:
           lda     $22ca
           eor     $22cb
           and     #$02
