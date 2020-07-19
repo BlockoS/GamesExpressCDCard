@@ -9,7 +9,7 @@ gx_unknown_e000:
           jmp     gx_unknown_e94f
           jmp     gx_unknown_e95b
           jmp     gx_unknown_e98c
-          jmp     le9cc_00
+          jmp     gx_unknown_e9cc
           jmp     gx_unknown_e9d7
           jmp     gx_unknown_e9e2
           jmp     gx_read_joypad
@@ -18,8 +18,8 @@ gx_unknown_e000:
           jmp     gx_unknown_ed03
           jmp     gx_unknown_ed07
           jmp     gx_unknown_ed0b
-          jmp     lef12_00
-          jmp     lef02_00
+          jmp     gx_unknown_ef12
+          jmp     gx_unknown_ef02
           jmp     gx_cd_reset
           jmp     gx_unknown_e17f
           jmp     gx_unknown_e1a0
@@ -28,13 +28,13 @@ gx_unknown_e000:
           jmp     gx_write_cd_fade_timer
           jmp     gx_unknown_e28b
           jmp     gx_unknown_e33a
-          jmp     le6ea_00
-          jmp     le738_00
+          jmp     gx_unknown_e6ea
+          jmp     gx_unknown_e738
           jmp     gx_adpcm_reset
-          jmp     le7a8_00
-          jmp     le7e7_00
-          jmp     le817_00
-          jmp     le5cd_00
+          jmp     gx_unknown_e7a8
+          jmp     gx_unknown_e7e7
+          jmp     gx_unknown_e817
+          jmp     gx_unknown_e5cd
           jmp     gx_unknown_e28b
           jmp     gx_irq_reset
           jmp     gx_irq_reset
@@ -58,11 +58,11 @@ gx_unknown_e000:
           jmp     gx_display_init
           jmp     gx_vdc_enable_display
           jmp     gx_vdc_disable_display
-          jmp     lf145_00
+          jmp     gx_unknown_f145
           jmp     gx_vdc_set_ctrl_hi
-          jmp     lf194_00
+          jmp     gx_unknown_f194
           jmp     lf22d_00
-          jmp     lf1db_00
+          jmp     gx_unknown_f1db
           jmp     lf4a4_00
           jmp     lf4ce_00
           jmp     lf4fa_00
@@ -70,10 +70,10 @@ gx_unknown_e000:
           jmp     lf49f_00
           jmp     lf1b1_00
           jmp     gx_vdc_enable_interrupts
-          jmp     lf17e_00
+          jmp     gx_vdc_set_control_reg
           jmp     gx_vdc_set_yres
-          jmp     lf0a9_00
-          jmp     lf0c3_00
+          jmp     gx_vdc_set_bat_size
+          jmp     gx_unknown_f0c3
           jmp     lf596_00
           jmp     lf59e_00
           jmp     lf5aa_00
@@ -369,7 +369,7 @@ le36d_00:
           sta     <$17
           lda     #$20
           sta     <$18
-          jsr     le40f_00
+          jsr     gx_adpcm_read_to_ram
           cmp     #$88
           bne     le393_00
           inc     <$21
@@ -414,7 +414,7 @@ le3da_00:
           sta     <$17
           lda     #$08
           sta     <$18
-          jsr     le454_00
+          jsr     gx_adpcm_read_to_vdc
           cmp     #$88
           bne     le3ed_00
           dec     <$23
@@ -671,10 +671,191 @@ le5b7_00:
 le5cb_00:
           pla     
           rts     
+gx_unknown_e5cd:
+          tii     $2020, $2207, $0008
+le5d4_00:
+          jsr     gx_unknown_e25c
+          lda     #$80
+          sta     $2219
+          lda     #$d8
+          sta     $2210
+          lda     <$25
+          sta     $2212
+          jsr     gx_unknown_e28b
+          jsr     gx_unknown_e4cd
+          cmp     #$00
+          beq     le600_00
+          jsr     gx_unknown_e532
+          bcc     le5f6_00
+          rts     
+le5f6_00:
+          tii     $2207, $2020, $0008
+          jmp     le5d4_00
+le600_00:
+          jsr     gx_unknown_e25c
+          lda     #$d9
+          sta     $2210
+          lda     <$20
+          and     #$07
+          sta     $2211
+          lda     #$80
+          sta     $2219
+          lda     <$26
+          sta     $2212
+          jsr     gx_unknown_e28b
+          cmp     #$98
+          beq     le63f_00
+          lda     $2211
+          cmp     #$04
+          bne     le62a_00
+          lda     $223b
+le62a_00:
+          sta     $223b
+          cmp     #$01
+          beq     le660_00
+          cmp     #$02
+          bne     le63f_00
+          stz     $2206
+          lda     #$20
+          tsb     cd_control
+          bra     le660_00
+le63f_00:
+          lda     $2211
+          cmp     #$04
+          bne     le649_00
+          sta     $223b
+le649_00:
+          jsr     gx_unknown_e4cd
+          cmp     #$00
+          beq     le65f_00
+          jsr     gx_unknown_e532
+          bcs     le65f_00
+          tii     $2207, $2020, $0008
+          jmp     le600_00
+le65f_00:
+          rts     
+le660_00:
+          lda     #$00
+          rts     
+le663_00:
+          lda     #$3c
+          sta     <$21
+          lda     #$22
+          sta     <$22
+          jsr     le68e_00
+          lda     $223c
+          beq     le676_00
+          lda     #$00
+          rts     
+le676_00:
+          jsr     gx_unknown_e25c
+          lda     #$da
+          sta     $2210
+          jsr     gx_unknown_e28b
+          jsr     gx_unknown_e4cd
+          cmp     #$00
+          beq     le68d_00
+          jsr     gx_unknown_e532
+          bcc     le663_00
+le68d_00:
+          rts     
+le68e_00:
+          tii     $2020, $2207, $0008
+le695_00:
+          jsr     gx_unknown_e25c
+          lda     #$dd
+          sta     $2210
+          lda     #$0a
+          sta     $2211
+          jsr     gx_unknown_e28b
+          cmp     #$c8
+          bne     le6b4_00
+          lda     #$0a
+          sta     <$23
+          lda     #$00
+          sta     <$24
+          jsr     gx_unknown_e1e7
+le6b4_00:
+          jsr     gx_unknown_e4cd
+          tax     
+          beq     le6c9_00
+          jsr     gx_unknown_e532
+          bcs     le6c9_00
+          tii     $2207, $2020, $0008
+          jmp     le695_00
+le6c9_00:
+          rts     
+          lda     #$03
+          tsb     adpcm_addr_ctrl
+          lda     #$01
+          trb     adpcm_addr_ctrl
+          lda     #$02
+          trb     adpcm_addr_ctrl
+          rts     
+gx_unknown_e6da:
+          lda     #$0c
+          tsb     adpcm_addr_ctrl
+          lda     #$04
+          trb     adpcm_addr_ctrl
+          lda     #$08
+          trb     adpcm_addr_ctrl
+          rts     
+gx_unknown_e6ea:
+          lda     adpcm_status
+          and     #$01
+          bne     le6f6_00
+          lda     bram_lock
+          and     #$04
+le6f6_00:
+          tax     
+          lda     adpcm_addr_ctrl
+          and     #$20
+          bne     le703_00
+          lda     adpcm_status
+          and     #$08
+le703_00:
+          rts     
 
 	.code
 	.bank $000
-	.org $e794
+	.org $e738
+gx_unknown_e738:
+          tst     #$03, $180b
+          beq     le742_00
+          lda     #$ff
+          bra     le793_00
+le742_00:
+          tii     $2020, $2207, $0008
+le749_00:
+          tii     $2021, adpcm_addr_l, $0002
+          jsr     le6ca_00
+          jsr     gx_unknown_e25c
+          lda     #$08
+          sta     $2210
+          lda     <$27
+          sta     $2211
+          lda     <$26
+          sta     $2212
+          lda     <$25
+          sta     $2213
+          lda     <$23
+          sta     $2214
+          jsr     gx_unknown_e28b
+          cmp     #$c8
+          bne     le779_00
+          jsr     le70f_00
+le779_00:
+          jsr     gx_unknown_e4cd
+          cmp     #$00
+          beq     le793_00
+          jsr     gx_unknown_e532
+          bcs     le793_00
+          tii     $2207, $2020, $0008
+          lda     $2233
+          cmp     #$10
+          bcc     le749_00
+le793_00:
+          rts     
 gx_adpcm_reset:
           lda     #$80
           sta     adpcm_addr_ctrl
@@ -683,6 +864,86 @@ gx_adpcm_reset:
           lda     #$6f
           trb     cd_control                ; clear all bits except bits 4 and 7
           stz     adpcm_playback_rate
+          rts     
+gx_unknown_e7a8:
+          jsr     gx_adpcm_reset
+le7ab_00:
+          jsr     gx_unknown_e6ea
+          bne     le7ab_00
+          tii     $201a, adpcm_addr_l, $0002
+          jsr     gx_unknown_e6da
+          tii     $201e, adpcm_addr_l, $0002
+          jsr     le704_00
+          lda     adpcm_ram_offset
+le7c7_00:
+          tst     #$80, $180c
+          bne     le7c7_00
+          lda     adpcm_ram_offset
+          sta     [$1c]
+          inc     <$1c
+          bne     le7d8_00
+          inc     <$1d
+le7d8_00:
+          lda     <$1e
+          bne     le7de_00
+          dec     <$1f
+le7de_00:
+          dec     <$1e
+          lda     <$1e
+          ora     <$1f
+          bne     le7c7_00
+          rts     
+gx_unknown_e7e7:
+          tst     #$03, $180b
+          bne     le816_00
+          tii     $201a, adpcm_addr_l, $0002
+          jsr     le6ca_00
+le7f7_00:
+          lda     [$1c]
+          sta     adpcm_ram_offset
+le7fc_00:
+          tst     #$04, $180c
+          bne     le7fc_00
+          inc     <$1c
+          bne     le808_00
+          inc     <$1d
+le808_00:
+          lda     <$1e
+          bne     le80e_00
+          dec     <$1f
+le80e_00:
+          dec     <$1e
+          lda     <$1e
+          ora     <$1f
+          bne     le7f7_00
+le816_00:
+          rts     
+gx_unknown_e817:
+          jsr     gx_unknown_e6ea
+          bne     le851_00
+          lda     <$1d
+          cmp     #$10
+          bcs     le851_00
+          sta     adpcm_playback_rate
+          lda     <$1a
+          sta     adpcm_addr_l
+          lda     <$1b
+          sta     adpcm_addr_h
+          jsr     le852_00
+          lda     <$1e
+          sta     adpcm_addr_l
+          lda     <$1f
+          sta     adpcm_addr_h
+          lda     #$10
+          tsb     adpcm_addr_ctrl
+          lda     #$10
+          trb     adpcm_addr_ctrl
+          lda     #$08
+          tsb     cd_control
+          lda     #$60
+          sta     adpcm_addr_ctrl
+          cla     
+le851_00:
           rts     
 
 	.code
@@ -869,14 +1130,14 @@ le9a3_00:
           trb     $22be                     ; does this mean that 22be is some kind of lock?
           txa     
           rts     
-le9cc_00:
+gx_unknown_e9cc:
           ldx     $22bd
           lda     #$00
           sta     $228b, X
           jmp     lea55_00
 gx_unknown_e9d7:
           cpx     $22bd
-          beq     le9cc_00
+          beq     gx_unknown_e9cc
           lda     #$00
           sta     $228b, X
           rts     
@@ -1575,7 +1836,7 @@ gx_vdc_write:
           adc     #$00
           sta     <$3b
           jmp     ledcb_00
-lef02_00:
+gx_unknown_ef02:
           lda     #$40
           sta     $22ca
           lda     #$5e
@@ -1583,7 +1844,7 @@ lef02_00:
           lda     #$80
           sta     $22cc
           rts     
-lef12_00:
+gx_unknown_ef12:
           lda     $22ca
           eor     $22cb
           and     #$02
@@ -1667,7 +1928,6 @@ gx_read_joypad:
           cpy     #$05
           bcc     @check_soft_reset
           rts     
-
           ora     [$02, X]                              ; [todo] this looks like data
           tsb     <$08
           bpl     lefb9_00
@@ -1678,7 +1938,6 @@ gx_read_joypad:
           asl     <$07
           bbs7    <$ff, lefcb_00
           bbs7    <$ff, lefc8_00
-
 gx_display_init:
           stz     <gx_scroll_x
 lefcb_00:
@@ -1747,7 +2006,6 @@ gx_vdc_init_table:
           .db $0b,$1f,$04
           .db $0f,$01,$00
           .db $13,$00,$08
-
 gx_vce_init:
           lda     <$42
           bne     @vce_next_mode
@@ -1802,9 +2060,40 @@ gx_vdc_set_ctrl_hi:
 gx_vdc_vram_auto_inc:
           .db $00,$08,$10,$18
 
-	.code
-	.bank $000
-	.org $f0e5
+gx_vdc_set_bat_size:
+          tax     
+          lda     gx_vdc_bat_size, X
+          php     
+          sei     
+          st0     #$09
+          sta     video_data_l
+          lda     <vdc_reg
+          sta     video_reg_l
+          plp     
+          rts     
+gx_vdc_bat_size:
+          .db $00,$10,$20,$30,$40,$50,$60,$70
+
+gx_unknown_f0c3:
+          php     
+          sei     
+          ora     #$40
+          and     #$cf
+          sta     $24c1
+          bpl     lf0d6_00
+          stz     $24bf
+          stz     $24c0
+          plp     
+          rts     
+lf0d6_00:
+          jsr     gx_vdc_disable_display
+          lda     $24c2
+          lsr     A
+          sta     $24bf
+          sta     $24c0
+          plp     
+          rts     
+
 gx_vdc_set_yres:
           bit     #$01
           beq     @l0
@@ -1846,6 +2135,17 @@ gx_vdc_set_yres:
           sta     <vdc_reg
           sta     video_reg_l
           rts     
+gx_unknown_f145:
+          cla     
+          jsr     gx_vdc_set_ctrl_hi
+          lda     #$00
+          sta     <vdc_reg
+          sta     video_reg_l
+          st1     #$00
+          st2     #$00
+          lda     #$02
+          sta     <vdc_reg
+          sta     video_reg_l
 
 	.code
 	.bank $000
@@ -1859,6 +2159,125 @@ gx_vdc_enable_interrupts:
           sta     <vdc_control
           sta     video_data_l
           stz     irq_disable
+          rts     
+
+gx_vdc_set_control_reg:
+          lda     #$03
+          sta     irq_disable               ; disable IRQ1 and IRQ2
+          lda     #$05
+          sta     <vdc_reg                  ; VDC control register
+          sta     video_reg_l
+          lda     <vdc_control
+          and     #$f3
+          sta     <vdc_control
+          sta     video_data_l
+          rts  
+   
+gx_unknown_f194:
+          cly     
+lf195_00:
+          lda     [$04], Y
+          cmp     #$ff
+          beq     lf1b0_00
+          phy     
+          jsr     gx_unknown_f1db
+          ply     
+          iny     
+          clc     
+          lda     <$00
+          adc     #$20
+          sta     <$00
+          lda     <$01
+          adc     #$00
+          sta     <$01
+          bra     lf195_00
+lf1b0_00:
+          rts     
+lf1b1_00:
+          cly     
+          ldx     <$06
+          beq     lf1c4_00
+lf1b6_00:
+          lda     [$00], Y
+          sta     [$02], Y
+          iny     
+          bne     lf1c1_00
+          inc     <$01
+          inc     <$03
+lf1c1_00:
+          dex     
+          bne     lf1b6_00
+lf1c4_00:
+          lda     <$07
+          beq     lf1cc_00
+          dec     <$07
+          bra     lf1b6_00
+lf1cc_00:
+          rts     
+gx_unknown_f1cd:
+          asl     A
+          asl     A
+          asl     A
+          asl     A
+          sta     color_reg_l
+          cla     
+          adc     #$00
+          sta     color_reg_h
+          rts     
+gx_unknown_f1db:
+          sta     <$02
+          lda     #$01
+          sta     <$03
+          lda     $2303
+          clx     
+lf1e5_00:
+          lsr     A
+          bcc     lf208_00
+          asl     <$03
+          inx     
+          cpx     #$04
+          bcc     lf1e5_00
+          php     
+          sei     
+          lda     <$02
+          bsr     gx_unknown_f1cd
+          cly     
+lf1f6_00:
+          lda     [$00], Y
+          sta     color_data_l
+          iny     
+          lda     [$00], Y
+          sta     color_data_h
+          iny     
+          cpy     #$20
+          bne     lf1f6_00
+          plp     
+          rts     
+lf208_00:
+          lda     <$02
+          sta     $2314, X
+          txa     
+          asl     A
+          asl     A
+          asl     A
+          asl     A
+          asl     A
+          tax     
+          cly     
+lf215_00:
+          lda     [$00], Y
+          sta     $2318, X
+          inx     
+          iny     
+          cpy     #$20
+          bne     lf215_00
+          php     
+          sei     
+          lda     #$10
+          tsb     <$11
+          lda     <$03
+          tsb     $2303
+          plp     
           rts     
 
 	.code
@@ -2033,7 +2452,7 @@ gx_unknown_fe3c:
           sta     $2025
           lda     #$01
           sta     $2023
-          jsr     le33a_00
+          jsr     gx_unknown_e33a
           ldx     #$04
 lfe61_00:
           lda     $ff2a, X
@@ -2049,7 +2468,7 @@ lfe6c_00:
           sta     $2023
           lda     #$80
           sta     $2021
-          jsr     le33a_00
+          jsr     gx_unknown_e33a
           lda     #$00
           sta     <$00
           lda     #$40
@@ -2152,7 +2571,7 @@ lff1a_00:
 gx_unknown_ff75:
           jsr     lff2f_00
           bmi     lff7d_00
-          jsr     le33a_00
+          jsr     gx_unknown_e33a
 lff7d_00:
           rts     
 

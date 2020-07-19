@@ -46,16 +46,19 @@
         "type": "code",
         "page": 0,
         "logical": "e513",
-        "size": "ba",
+        "size": "1f1",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
-    "gx_adpcm_reset": {
+
+    "gx_unknown_e738": {
         "filename": "games_express.asm",
         "type": "code",
         "page": 0,
-        "logical": "e794",
+        "logical": "e738",
+        "size": "11a",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
+
     "gx_irq_2_unknown": {
         "filename": "games_express.asm",
         "type": "code",
@@ -63,8 +66,8 @@
         "logical": "e865",
         "size": "da",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
-	},
-	"gx_unknown_e94f": {
+    },
+    "gx_unknown_e94f": {
         "filename": "games_express.asm",
         "type": "code",
         "page": 0,
@@ -98,20 +101,44 @@
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
         "data": { "type": "hex", "element_size": 1, "elements_per_line": 8 }
     },
-    "gx_vdc_set_yres": {
+
+    "gx_vdc_set_bat_size": {
         "filename": "games_express.asm",
         "type": "code",
         "page": 0,
-        "logical": "f0e5",
+        "logical": "f0a9",
+        "size": "12",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
+
+    "gx_vdc_bat_size": {
+        "filename": "games_express.asm",
+        "type": "data",
+        "page": 0,
+        "logical" :"f0bb",
+        "size": "8",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "hex", "element_size": 1, "elements_per_line": 8 }
+    },
+
+    "gx_unknown_f0c3": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f0c3",
+        "size": "96",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+
     "gx_vdc_enable_interrupts": {
         "filename": "games_express.asm",
         "type": "code",
         "page": 0,
         "logical": "f16a",
+        "size": "c3",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
+
     "gx_main": {
         "filename": "games_express.asm",
         "type": "code",
