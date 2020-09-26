@@ -49,7 +49,6 @@
         "size": "1f1",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
-
     "gx_unknown_e738": {
         "filename": "games_express.asm",
         "type": "code",
@@ -147,22 +146,22 @@
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
     
-    "___f97c": {
+    "gx_boot": {
         "filename": "games_express.asm",
         "type": "data",
         "page": 0,
-        "logical": "f97c",
+        "logical": "f978",
         "size": "8",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
         "data": { "type": "hex", "element_size": 1, "elements_per_line": 4 }
     },
 
-    "gx_vdc_clear_tiles": {
+    "gx_menu": {
         "filename": "games_express.asm",
         "type": "code",
         "page": 0,
-        "logical": "f989",
-        "size": "5c",
+        "logical": "f980",
+        "size": "65",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
     "gx_unknown_fe3c": {

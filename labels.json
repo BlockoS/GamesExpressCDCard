@@ -36,7 +36,8 @@
     { "name": "gx_unknown_e7e7", "logical": "e7e7", "page": "00" },
     { "name": "gx_unknown_e817", "logical": "e817", "page": "00" },
 
-    { "name": "gx_unknown_e903", "logical": "e903", "page": "00" },
+    { "name": "gx_proc_reset", "logical": "e903", "page": "00" },
+    { "name": "@loop", "logical": "e922", "page": "00" },
     { "name": "gx_unknown_e95b", "logical": "e95b", "page": "00" },
     { "name": "gx_unknown_e98c", "logical": "e98c", "page": "00" },
     { "name": "gx_unknown_e9cc", "logical": "e9cc", "page": "00" },
@@ -46,6 +47,8 @@
     { "name": "gx_unknown_e9d7", "logical": "e9d7", "page": "00" },
 
     { "name": "gx_unknown_ea19", "logical": "ea19", "page": "00" },
+    { "name": "gx_wait_forever", "logical": "ea68", "page": "00" },
+    { "name": "@loop", "logical": "ea69", "page": "00" },
     { "name": "gx_irq_nmi", "logical": "ea9b", "page": "00" },
     { "name": "gx_irq_timer", "logical": "ea9c", "page": "00" },
     { "name": "gx_irq_2", "logical": "eaa3", "page": "00" },
@@ -95,6 +98,7 @@
     { "name": "gx_unknown_f1db", "logical": "f1db", "page": "00" },
     
     { "name": "gx_unknown_f27a", "logical": "f27a", "page": "00" },
+    { "name": "gx_vdc_clear_tiles", "logical": "f989", "page": "00" },
     { "name": "gx_unknown_f996", "logical": "f996", "page": "00" },
 
     { "name": "@loop", "logical": "f9d1", "page":"00"},
@@ -157,5 +161,14 @@
     { "name": "vdc_scroll_y+1", "logical": "202d", "page": "f8" },
     { "name": "irq1_user_hook", "logical": "2200", "page": "f8"},
     { "name": "irq2_user_hook", "logical": "2202", "page": "f8"},
-    { "name": "irq_timer_user_hook", "logical": "2263", "page": "f8"}
+    { "name": "irq_timer_user_hook", "logical": "2263", "page": "f8"},
+
+    { "name": "gx_proc.reg_a", "logical": "2295", "page": "f8"},
+    { "name": "gx_proc.reg_x", "logical": "229a", "page": "f8"},
+    { "name": "gx_proc.reg_y", "logical": "229f", "page": "f8"},
+    { "name": "gx_proc.stack_ptr", "logical": "22a4", "page": "f8"},
+    { "name": "gx_proc.reg_p", "logical": "22a9", "page": "f8"},
+    { "name": "gx_proc.lsb", "logical": "22ae", "page": "f8"},
+    { "name": "gx_proc.msb", "logical": "22b3", "page": "f8"},
+    { "name": "gx_proc.lock", "logical": "22be", "page": "f8"}
 ]

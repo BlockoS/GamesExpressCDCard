@@ -3,7 +3,7 @@
 	.org $e000
 gx_unknown_e000:
           jmp     gx_irq_reset
-          jmp     gx_unknown_e903
+          jmp     gx_proc_reset
           jmp     gx_unknown_ea19
           jmp     gx_unknown_e9e4
           jmp     gx_unknown_e94f
@@ -1024,29 +1024,31 @@ le8f1_00:
           lda     #$60
           trb     adpcm_addr_ctrl
 le902_00:
-          rts     
-gx_unknown_e903:
+          rts  
+
+gx_proc_reset:
           php     
           sei     
-          stz     $22be
+          stz     gx_proc.lock
           ldx     #$04
-          lda     #$68
-          sta     $22ae, X
-          lda     #$ea
-          sta     $22b3, X
+          lda     #low(gx_wait_forever)
+          sta     $gx_proc.lsb, X
+          lda     #high(gx_wait_forever)
+          sta     $gx_proc.msb, X
           lda     #$20
-          sta     $22a4, X
+          sta     gx_proc.stack_ptr, X
           lda     #$04
           sta     $228b, X
           stz     $22b8, X
           dex     
-le922_00:
+@loop:
           lda     #$00
           sta     $228b, X
           stz     $2290, X
           stz     $22b8, X
           dex     
-          bne     le922_00
+          bne     @loop
+
           stz     $22bd
           lda     #$80
           sta     $22b8, X
@@ -1054,14 +1056,6 @@ le922_00:
           sta     $228b
           plp     
           rts     
-    ; at the end we have
-    ; 228b 81 00 00 00 00 00 some flag
-    ; 22a4 __ __ __ __ 20    stack offset
-    ; 22a9 __ __ __ __ __    P register
-    ; 22ae __ __ __ __ 68    PC LSB
-    ; 22b3 __ __ __ __ ea    PC MSB
-    ; 22b8 80 00 00 00 04 00 
-    ; this may be some thread/process list
 
 	.code
 	.bank $000
@@ -1076,29 +1070,29 @@ gx_unknown_e94f:
           rts     
 gx_unknown_e95b:
           lda     #$01
-          tsb     $22be
+          tsb     gx_proc.lock
           stx     <$29
           sty     <$28
           ldx     $22bd
           ldy     #$01
           lda     [$28]
-          sta     $22ae, X
+          sta     gx_proc.lsb, X
           lda     [$28], Y
-          sta     $22b3, X
+          sta     gx_proc.msb, X
           iny     
           lda     [$28], Y
-          sta     $22a4, X
+          sta     gx_proc.stack_ptr, X
           iny     
           lda     [$28], Y
           sta     $22b8, X
           lda     #$00
-          sta     $22a9, X
+          sta     gx_proc.reg_p, X
           lda     #$04
           sta     $228b, X
           jmp     lea5a_00
 gx_unknown_e98c:                            ; parameters: X, Y => source pointer
           lda     #$01                      ; set bit #1
-          tsb     $22be
+          tsb     gx_proc.lock
           stx     <$29                      ; set data pointer
           sty     <$28
           clx     
@@ -1115,19 +1109,19 @@ le9a3_00:
           sta     $228b, X
           ldy     #$01
           lda     [$28]
-          sta     $22ae, X
+          sta     gx_proc.lsb, X
           lda     [$28], Y
-          sta     $22b3, X
+          sta     gx_proc.msb, X
           iny     
           lda     [$28], Y
-          sta     $22a4, X
+          sta     gx_proc.stack_ptr, X
           iny     
           lda     [$28], Y
           sta     $22b8, X
           lda     #$00
-          sta     $22a9, X
+          sta     gx_proc.reg_p, X
           lda     #$01                      ; reset bit #1
-          trb     $22be                     ; does this mean that 22be is some kind of lock?
+          trb     gx_proc.lock              ; does this mean that 22be is some kind of lock?
           txa     
           rts     
 gx_unknown_e9cc:
@@ -1146,49 +1140,49 @@ gx_unknown_e9e2:
 gx_unknown_e9e4:
           pha     
           lda     #$01
-          tsb     $22be
+          tsb     gx_proc.lock
           txa     
           ldx     $22bd
-          sta     $229a, X
+          sta     gx_proc.reg_x, X
           tya     
-          sta     $229f, X
+          sta     gx_proc.reg_y, X
           pla     
           php     
           sta     $2290, X
           pla     
-          sta     $22a9, X
+          sta     gx_proc.reg_p, X
           pla     
           clc     
           adc     #$01
-          sta     $22ae, X
+          sta     gx_proc.lsb, X
           pla     
           adc     #$00
-          sta     $22b3, X
+          sta     gx_proc.msb, X
           sax     
           tsx     
           sax     
-          sta     $22a4, X
+          sta     gx_proc.stack_ptr, X
           lda     #$02
           sta     $228b, X
           jmp     lea5a_00
 gx_unknown_ea19:
           phx     
           ldx     $22bd
-          sta     $2295, X
+          sta     gx_proc.reg_a, X
           pla     
-          sta     $229a, X
+          sta     gx_proc.reg_x, X
           tya     
-          sta     $229f, X
+          sta     gx_proc.reg_y, X
           pla     
-          sta     $22a9, X
+          sta     gx_proc.reg_p, X
           pla     
-          sta     $22ae, X
+          sta     gx_proc.lsb, X
           pla     
-          sta     $22b3, X
+          sta     gx_proc.msb, X
           sax     
           tsx     
           sax     
-          sta     $22a4, X
+          sta     gx_proc.stack_ptr, X
           lda     #$04
           sta     $228b, X
           ldx     #$04
@@ -1205,7 +1199,7 @@ lea52_00:
           bpl     lea41_00
 lea55_00:
           lda     #$01
-          tsb     $22be
+          tsb     gx_proc.lock
 lea5a_00:
           clx     
 lea5b_00:
@@ -1215,33 +1209,37 @@ lea5b_00:
           inx     
           cpx     #$05
           bne     lea5b_00
+
           brk     
+
+gx_wait_forever:
           cli     
-lea69_00:
-          bra     lea69_00
+@loop:
+          bra     @loop
+
 lea6b_00:
           stx     $22bd
           lda     #$01
           ora     $22b8, X
           sta     $228b, X
-          lda     $229f, X
+          lda     gx_proc.reg_y, X
           tay     
-          lda     $22a4, X          ; 22a4 : stack offset
+          lda     gx_proc.stack_ptr, X      ; stack offset
           sax     
           txs     
           sax     
-          lda     $22b3, X          ; return address MSB
+          lda     gx_proc.msb, X            ; return address MSB
           pha     
-          lda     $22ae, X          ; return address LSB
+          lda     gx_proc.lsb, X            ; return address LSB
           pha     
-          lda     $22a9, X          ; P register
+          lda     gx_proc.reg_p, X          ; P register
           pha     
-          lda     $229a, X          ; future X reg
+          lda     gx_proc.reg_x, X          ; future X reg
           pha     
           sei     
           lda     #$01
-          trb     $22be
-          lda     $2295, X
+          trb     gx_proc.lock
+          lda     gx_proc.reg_a, X
           plx     
           rti     
 gx_irq_nmi:
@@ -1263,6 +1261,10 @@ leaa9_00:
           plx     
           pla     
           rti     
+
+;-------------------------------------------------------------------------------
+; "RESET" interrupt handler
+;-------------------------------------------------------------------------------
 gx_irq_reset:
           csh                           ; switch CPU to high speed mode
           sei                           ; disable interrupts
@@ -1287,8 +1289,12 @@ gx_soft_reset:
 leae1_00:
           lda     #$01                  ; map 1st ROM bank to the 6th memory page
           tam     #$06
-          jsr     gx_unknown_e903
-          jmp     gx_main
+          jsr     gx_proc_reset         ; reset process list
+          jmp     gx_main               ; jump to main routine
+
+;-------------------------------------------------------------------------------
+; 
+;-------------------------------------------------------------------------------
 gx_update_scroll:
           stz     <$35                  ; reset scroll window MSB [todo]
           stz     <$38                  ; reset scroll window index
@@ -1467,7 +1473,7 @@ lec2d_00:
           lda     $228b, X
           bit     #$80
           bne     lec6b_00
-          lda     $22be
+          lda     gx_proc.lock
           bit     #$01
           bne     lec6b_00
           ply     
@@ -1571,9 +1577,11 @@ lecf2_00:
           sta     video_data_h
           sty     <$38                  ; save index
           rts     
+
 gx_unknown_ed03:
           stz     $22c6
-          rts     
+          rts  
+
 gx_unknown_ed07:
           lda     $22c6
           rts     
@@ -2283,6 +2291,9 @@ lf215_00:
 	.code
 	.bank $000
 	.org $f8a4
+;-------------------------------------------------------------------------------
+; Main routine
+;-------------------------------------------------------------------------------
 gx_main:
           jsr     gx_cd_reset
           jsr     gx_update_scroll
@@ -2383,9 +2394,14 @@ lf96e_00:
           jsr     gx_unknown_c053
           jmp     lf8fc_00
 
-	.code
-	.bank $000
-	.org $f989
+gx_boot:
+          .db "BOOT"
+          .dw gx_menu
+          .db $40,$80
+gx_menu:
+          jsr     led7f_00
+          jsr     gx_unknown_e9e2
+          jmp     gx_menu
 gx_vdc_clear_tiles:
           stz     <$46
           stz     <$47
