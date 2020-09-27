@@ -8,7 +8,7 @@ gx_unknown_e000:
           jmp     gx_unknown_e9e4
           jmp     gx_unknown_e94f
           jmp     gx_unknown_e95b
-          jmp     gx_unknown_e98c
+          jmp     gx_proc_load
           jmp     gx_unknown_e9cc
           jmp     gx_unknown_e9d7
           jmp     gx_unknown_e9e2
@@ -184,6 +184,10 @@ le21a_00:
           cmp     #$88
           jsr     le4ea_00
           rts     
+
+;-------------------------------------------------------------------------------
+; Reset CDROM
+;-------------------------------------------------------------------------------
 gx_cd_reset:
           lda     cd_reset                  ; setting bit 2 will reset CDROM hardware
           ora     #$02
@@ -198,6 +202,7 @@ gx_cd_reset:
           dex     
           bne     @loop
           rts     
+
 gx_unknown_e245:
           jsr     gx_unknown_e25c
           stz     $2210
@@ -215,6 +220,11 @@ gx_unknown_e25c:
           stz     $2211
           tii     $2211, $2212, $0008
           rts     
+
+;-------------------------------------------------------------------------------
+; Wait 7962 cycles.
+; This should be enough for CDROM to be ready.
+;-------------------------------------------------------------------------------
 gx_cd_wait:                                 ; A is the input parameter
           phx                               ; it will wait for A*(loop cycles)
           phy     
@@ -232,6 +242,7 @@ gx_cd_wait:                                 ; A is the input parameter
           ply     
           plx     
           rts     
+
 gx_unknown_e279:
           lda     #$80
           tsb     cd_control
@@ -436,6 +447,8 @@ gx_negate:
           sbc     <$18
           sta     <$18
           rts     
+
+;-------------------------------------------------------------------------------
 ; Read data from ADPCM? and store it to RAM.
 ; Parameters:
 ;   $2017-18 : the number of bytes to read.
@@ -444,6 +457,7 @@ gx_negate:
 ; Return:
 ;   A : CD status
 ;   X : Remaining number of 256 bytes blocs in the current sector 
+;-------------------------------------------------------------------------------
 gx_adpcm_read_to_ram:
           jsr     gx_negate     ; negates the number of bytes to read
 @start:                         
@@ -785,6 +799,7 @@ le6b4_00:
           jmp     le695_00
 le6c9_00:
           rts     
+le6ca_00:
           lda     #$03
           tsb     adpcm_addr_ctrl
           lda     #$01
@@ -815,10 +830,33 @@ le6f6_00:
           and     #$08
 le703_00:
           rts     
-
-	.code
-	.bank $000
-	.org $e738
+le704_00:
+          lda     #$10
+          tsb     adpcm_addr_ctrl
+          lda     #$10
+          trb     adpcm_addr_ctrl
+          rts     
+le70f_00:
+          lda     cd_status
+          and     #$f8
+          sta     $222f
+          cmp     #$c8
+          beq     le721_00
+          cmp     #$d8
+          beq     le72f_00
+          bra     le70f_00
+le721_00:
+          lda     adpcm_addr_l
+          sta     adpcm_ram_offset
+le727_00:
+          tst     #$04, $180c
+          bne     le727_00
+          bra     le70f_00
+le72f_00:
+          lda     cd_status
+          and     #$b8
+          sta     $222f
+          rts     
 gx_unknown_e738:
           tst     #$03, $180b
           beq     le742_00
@@ -1026,40 +1064,59 @@ le8f1_00:
 le902_00:
           rts  
 
+;-------------------------------------------------------------------------------
+; Reset process list.
+; The process list will only contain "gx_wait_forever".
+;-------------------------------------------------------------------------------
 gx_proc_reset:
-          php     
-          sei     
-          stz     gx_proc.lock
-          ldx     #$04
-          lda     #low(gx_wait_forever)
+          php                                   ; backup status register onto the stack
+          sei                                   ; disable interrupts
+          stz     gx_proc.lock                  ; reset process list lock
+          ldx     #$04                          ; set the 5th entry
+          lda     #low(gx_wait_forever)         ; the routine will be gx_wait_forever
           sta     $gx_proc.lsb, X
           lda     #high(gx_wait_forever)
           sta     $gx_proc.msb, X
           lda     #$20
-          sta     gx_proc.stack_ptr, X
+          sta     gx_proc.stack_ptr, X          ; set the routine stack offset
           lda     #$04
-          sta     $228b, X
-          stz     $22b8, X
+          sta     $228b, X                      ; 0 => free
+                                                ; 1 => ??
+                                                ; 2 => ??
+                                                ; 4 => ??
+                                                ; 8 => ??
+                                                
+          stz     $22b8, X                      ; [todo] ???
           dex     
-@loop:
-          lda     #$00
-          sta     $228b, X
-          stz     $2290, X
-          stz     $22b8, X
-          dex     
-          bne     @loop
-
-          stz     $22bd
+@loop:                                          ; [todo] ???
+              lda     #$00
+              sta     $228b, X
+              stz     $2290, X
+              stz     $22b8, X
+              dex     
+              bne     @loop
+          stz     gx_proc.last
           lda     #$80
           sta     $22b8, X
           lda     #$81
           sta     $228b
-          plp     
+          plp                                   ; restore status register
           rts     
 
-	.code
-	.bank $000
-	.org $e94f
+          ; Count the number of process to run.
+          ldx     #$04
+          cly     
+le942_00:
+          lda     $228b, X
+          cmp     #$00
+          beq     le94a_00
+          iny     
+le94a_00:
+          dex     
+          bpl     le942_00
+          tya     
+          rts   
+
 gx_unknown_e94f:
           php     
           sei     
@@ -1068,12 +1125,13 @@ gx_unknown_e94f:
           sta     $228b, X
           plp     
           rts     
+          
 gx_unknown_e95b:
           lda     #$01
           tsb     gx_proc.lock
           stx     <$29
           sty     <$28
-          ldx     $22bd
+          ldx     gx_proc.last
           ldy     #$01
           lda     [$28]
           sta     gx_proc.lsb, X
@@ -1090,21 +1148,31 @@ gx_unknown_e95b:
           lda     #$04
           sta     $228b, X
           jmp     lea5a_00
-gx_unknown_e98c:                            ; parameters: X, Y => source pointer
-          lda     #$01                      ; set bit #1
+
+;-------------------------------------------------------------------------------
+; Add process to list.
+; Parameters:
+;   X : MSB of the process infos address
+;   Y : LSB of the process infos address
+;
+; Return:
+;   A : Process index.
+;-------------------------------------------------------------------------------
+gx_proc_load:
+          lda     #$01                      ; lock process list
           tsb     gx_proc.lock
           stx     <$29                      ; set data pointer
           sty     <$28
           clx     
-le996_00:
-          lda     $228b, X                  ; what's inside 228b and onwards?
-          cmp     #$00
-          beq     le9a3_00
+le996_00:                                   ; search for the first empty entry in the process list
+              lda     $228b, X              ; what's inside 228b and onwards?
+              cmp     #$00
+              beq     @found
           inx     
           cmp     #$05
           bne     le996_00
-          brk                               ; trigger IRQ2
-le9a3_00:
+          brk                               ; trigger IRQ2 => run process list ?
+@found:
           lda     #$04
           sta     $228b, X
           ldy     #$01
@@ -1120,17 +1188,18 @@ le9a3_00:
           sta     $22b8, X
           lda     #$00
           sta     gx_proc.reg_p, X
-          lda     #$01                      ; reset bit #1
-          trb     gx_proc.lock              ; does this mean that 22be is some kind of lock?
+          lda     #$01
+          trb     gx_proc.lock              ; unlock process list
           txa     
           rts     
+
 gx_unknown_e9cc:
-          ldx     $22bd
+          ldx     gx_proc.last
           lda     #$00
           sta     $228b, X
           jmp     lea55_00
 gx_unknown_e9d7:
-          cpx     $22bd
+          cpx     gx_proc.last
           beq     gx_unknown_e9cc
           lda     #$00
           sta     $228b, X
@@ -1142,7 +1211,7 @@ gx_unknown_e9e4:
           lda     #$01
           tsb     gx_proc.lock
           txa     
-          ldx     $22bd
+          ldx     gx_proc.last
           sta     gx_proc.reg_x, X
           tya     
           sta     gx_proc.reg_y, X
@@ -1167,7 +1236,7 @@ gx_unknown_e9e4:
           jmp     lea5a_00
 gx_unknown_ea19:
           phx     
-          ldx     $22bd
+          ldx     gx_proc.last
           sta     gx_proc.reg_a, X
           pla     
           sta     gx_proc.reg_x, X
@@ -1218,7 +1287,7 @@ gx_wait_forever:
           bra     @loop
 
 lea6b_00:
-          stx     $22bd
+          stx     gx_proc.last
           lda     #$01
           ora     $22b8, X
           sta     $228b, X
@@ -1249,6 +1318,10 @@ gx_irq_timer:
           jmp     [irq_timer_user_hook]
 leaa2_00:
           rti     
+
+;-------------------------------------------------------------------------------
+; IRQ2 interrupt handler
+;-------------------------------------------------------------------------------
 gx_irq_2:
           bbr1    <irq_m, leaa9_00
           jmp     [irq2_user_hook]
@@ -1283,9 +1356,9 @@ gx_soft_reset:
           csh                           ; switch CPU to high speed mode
           ldx     #$ff                  ; reset stack pointer
           txs     
-          lda     $22bf
+          lda     $22bf                 ; what is 22bf used for? 
           bne     leae1_00
-          inc     $22bf
+              inc     $22bf
 leae1_00:
           lda     #$01                  ; map 1st ROM bank to the 6th memory page
           tam     #$06
@@ -1307,6 +1380,7 @@ gx_update_scroll:
           lda     <gx_scroll_y+1
           sta     <vdc_scroll_y+1
           rts     
+
 gx_unknown_eb00:
           lda     $24c0
           sta     <$39
@@ -1469,7 +1543,7 @@ lec2d_00:
           sta     video_reg_l
           jsr     gx_unknown_f27a
           jsr     gx_read_joypad
-          ldx     $22bd
+          ldx     gx_proc.last
           lda     $228b, X
           bit     #$80
           bne     lec6b_00
@@ -1585,13 +1659,15 @@ gx_unknown_ed03:
 gx_unknown_ed07:
           lda     $22c6
           rts     
+
 gx_unknown_ed0b:
           lda     $22c6
           bne     led11_00
-          rts     
+            rts     
 led11_00:
           jsr     gx_unknown_e9e4
           rts     
+
 gx_vdc_load_vram:
           lda     <$3b
 led17_00:
@@ -2295,12 +2371,12 @@ lf215_00:
 ; Main routine
 ;-------------------------------------------------------------------------------
 gx_main:
-          jsr     gx_cd_reset
+          jsr     gx_cd_reset                   ; reset cdrom drive
           jsr     gx_update_scroll
           jsr     gx_unknown_ed03
-          ldx     #$f9
-          ldy     #$7c
-          jsr     gx_unknown_e98c               ; [todo] load process list?
+          ldx     #high(gx_boot+4)              ; add the gx_boot to process list
+          ldy     #low(gx_boot+4)
+          jsr     gx_proc_load
           lda     #$00
           jsr     gx_display_init
           jsr     gx_vdc_disable_display
@@ -2664,7 +2740,7 @@ lc05e_01:
 gx_unknown_c07f:
           ldx     #$c0
           ldy     #$99
-          jsr     gx_unknown_e98c  ; [todo] load process list?
+          jsr     gx_proc_load
           pha     
 lc087_01:
           jsr     gx_unknown_e9e2

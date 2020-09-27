@@ -21,40 +21,16 @@
         "type": "code",
         "page": 0,
         "logical": "e179",
-        "size": "1c1",
+        "size": "371",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
-	},
-	
-    "gx_unknown_e33a": {
-        "filename": "games_express.asm",
-        "type": "code",
-        "page": 0,
-        "logical": "e33a",
-		"size": "193",
-		"mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
 	},
 
-    "gx_unknown_e4cd": {
-        "filename": "games_express.asm",
-        "type": "code",
-        "page": 0,
-        "logical": "e4cd",
-        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
-    },
     "gx_unknown_e513": {
         "filename": "games_express.asm",
         "type": "code",
         "page": 0,
         "logical": "e513",
-        "size": "1f1",
-        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
-    },
-    "gx_unknown_e738": {
-        "filename": "games_express.asm",
-        "type": "code",
-        "page": 0,
-        "logical": "e738",
-        "size": "11a",
+        "size": "33f",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
 
@@ -63,15 +39,7 @@
         "type": "code",
         "page": 0,
         "logical": "e865",
-        "size": "da",
-        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
-    },
-    "gx_unknown_e94f": {
-        "filename": "games_express.asm",
-        "type": "code",
-        "page": 0,
-        "logical": "e94f",
-        "size": "6e1",
+        "size": "7cb",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
     "gx_vdc_init_table": {
@@ -183,7 +151,7 @@
         "type": "data",
         "page": 0,
         "logical" :"fff6",
-        "size": "9",
+        "size": "a",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
         "data": { "type": "hex", "element_size": 2, "elements_per_line": 1 }
     },
