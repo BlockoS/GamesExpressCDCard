@@ -177,5 +177,7 @@
     { "name": "gx_proc.lsb", "logical": "22ae", "page": "f8"},
     { "name": "gx_proc.msb", "logical": "22b3", "page": "f8"},
     { "name": "gx_proc.last", "logical": "22bd", "page": "f8" },
-    { "name": "gx_proc.lock", "logical": "22be", "page": "f8"}
+    { "name": "gx_proc.lock", "logical": "22be", "page": "f8"},
+
+    { "name": "@wait_run", "logical": "c087", "page": "01"}
 ]

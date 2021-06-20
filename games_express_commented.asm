@@ -2411,7 +2411,7 @@ lf8f5_00:
           jsr     gx_load_gfx_data
 lf8fc_00:
           jsr     gx_cd_reset
-          jsr     gx_unknown_c07f
+          jsr     gx_main_screen
           jsr     gx_adpcm_reset
           cla     
           jsr     gx_write_cd_fade_timer
@@ -2737,16 +2737,19 @@ lc05e_01:
           bpl     lc05e_01
           rts     
 
-gx_unknown_c07f:
+;-------------------------------------------------------------------------------
+; Display atlernatively 3 sprites and "boot" cdrom when the user presses RUN.
+;-------------------------------------------------------------------------------
+gx_main_screen:
           ldx     #$c0
-          ldy     #$99
+          ldy     #$99                      ; [todo] what's at $c099?
           jsr     gx_proc_load
           pha     
-lc087_01:
+@wait_run:                                  ; wait for run button o be pressed.
           jsr     gx_unknown_e9e2
-          lda     $22d8
-          and     #$08
-          beq     lc087_01
+          lda     $22d8                     ; get joypad 0 state
+          and     #$08                      ; check if RUN bit is set
+          beq     @wait_run
           plx     
           jsr     gx_unknown_e9d7
           jsr     gx_unknown_f996

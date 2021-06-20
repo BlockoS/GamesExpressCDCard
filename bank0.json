@@ -169,7 +169,7 @@
         "logical": "c053",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
-    "gx_unknown_c07f": {
+    "gx_main_screen": {
         "filename": "games_express.asm",
         "type": "code",
         "page": 1,
