@@ -3,98 +3,192 @@
 	.org $e000
 gx_unknown_e000:
           jmp     gx_irq_reset
+; $E003:
           jmp     gx_proc_reset
+; $E006:
           jmp     gx_unknown_ea19
+; $E009:
           jmp     gx_unknown_e9e4
+; $E00C:
           jmp     gx_unknown_e94f
+; $E00F:
           jmp     gx_unknown_e95b
+; $E012:
           jmp     gx_proc_load
+; $E015:
           jmp     gx_unknown_e9cc
+; $E018:
           jmp     gx_unknown_e9d7
+; $E01B:
           jmp     gx_unknown_e9e2
+; $E01E:
           jmp     gx_read_joypad
+; $E021:
           jmp     lfce4_00
+; $E024:
           jmp     gx_vdc_load_vram
+; $E027:
           jmp     gx_unknown_ed03
+; $E02A:
           jmp     gx_unknown_ed07
+; $E02D:
           jmp     gx_unknown_ed0b
+; $E030:
           jmp     gx_unknown_ef12
+; $E033:
           jmp     gx_unknown_ef02
+; $E036:
           jmp     gx_cd_reset
+; $E039:
           jmp     gx_unknown_e17f
+; $E03C:
           jmp     gx_unknown_e1a0
+; $E03F:
           jmp     gx_unknown_fe3c
+; $E042:
           jmp     gx_unknown_ff75
+; $E045:
           jmp     gx_write_cd_fade_timer
+; $E048:
           jmp     gx_unknown_e28b
+; $E04B:
           jmp     gx_unknown_e33a
+; $E04E:
           jmp     gx_unknown_e6ea
+; $E051:
           jmp     gx_unknown_e738
+; $E054:
           jmp     gx_adpcm_reset
+; $E057:
           jmp     gx_unknown_e7a8
+; $E05A:
           jmp     gx_unknown_e7e7
+; $E05D:
           jmp     gx_unknown_e817
+; $E060:
           jmp     gx_unknown_e5cd
+; $E063:
           jmp     gx_unknown_e28b
+; $E066:
           jmp     gx_irq_reset
+; $E069:
           jmp     gx_irq_reset
+; $E06C:
           jmp     gx_irq_reset
+; $E06F:
           jmp     gx_irq_reset
+; $E072:
           jmp     gx_irq_reset
+; $E075:
           jmp     gx_irq_reset
+; $E078:
           jmp     gx_irq_reset
+; $E07B:
           jmp     gx_irq_reset
+; $E07E:
           jmp     gx_irq_reset
+; $E081:
           jmp     gx_irq_reset
+; $E084:
           jmp     gx_irq_reset
+; $E087:
           jmp     gx_irq_reset
+; $E08A:
           jmp     lfe11_00
+; $E08D:
           jmp     lff2f_00
+; $E090:
           jmp     gx_vdc_clear_tiles
+; $E093:
           jmp     lf9e5_00
+; $E096:
           jmp     lf9ed_00
+; $E099:
           jmp     lfa62_00
+; $E09C:
           jmp     gx_unknown_f996
+; $E09F:
           jmp     gx_display_init
+; $E0A2:
           jmp     gx_vdc_enable_display
+; $E0A5:
           jmp     gx_vdc_disable_display
+; $E0A8:
           jmp     gx_unknown_f145
+; $E0AB:
           jmp     gx_vdc_set_ctrl_hi
+; $E0AE:
           jmp     gx_unknown_f194
+; $E0B1:
           jmp     lf22d_00
+; $E0B4:
           jmp     gx_unknown_f1db
+; $E0B7:
           jmp     lf4a4_00
+; $E0BA:
           jmp     lf4ce_00
+; $E0BD:
           jmp     lf4fa_00
+; $E0C0:
           jmp     lf518_00
+; $E0C3:
           jmp     lf49f_00
+; $E0C6:
           jmp     lf1b1_00
+; $E0C9:
           jmp     gx_vdc_enable_interrupts
+; $E0CC:
           jmp     gx_vdc_set_control_reg
+; $E0CF:
           jmp     gx_vdc_set_yres
+; $E0D2:
           jmp     gx_vdc_set_bat_size
+; $E0D5:
           jmp     gx_unknown_f0c3
+; $E0D8:
           jmp     lf596_00
+; $E0DB:
           jmp     lf59e_00
+; $E0DE:
           jmp     lf5aa_00
+; $E0E1:
           jmp     lf5b7_00
+; $E0E4:
           jmp     lf5c0_00
+; $E0E7:
           jmp     lf5fa_00
+; $E0EA:
           jmp     lf622_00
+; $E0ED:
           jmp     lf6ad_00
+; $E0F0:
           jmp     lf683_00
+; $E0F3:
           jmp     lf7c7_00
+; $E0F6:
           jmp     lfb5c_00
+; $E0F9:
           jmp     lfb66_00
+; $E0FC:
           jmp     lfbc3_00
+; $E0FF:
           jmp     lfbf5_00
+; $E102:
           jmp     gx_irq_reset
+; $E105:
           jmp     gx_irq_reset
+; $E108:
           jmp     gx_irq_reset
+; $E10B:
           jmp     gx_irq_reset
+; $E10E:
           jmp     gx_irq_reset
+; $E111:
           jmp     gx_irq_reset
 
+; Bank $00
+; Addr $E114
+;
 gx_info_string:
           db "SYSTEM KERNEL REV 2reserv_tbl_0 1993/04/18",$0d,$0a
           db "Created by Hack Technical Group",$0d,$0a
@@ -188,6 +282,9 @@ le21a_00:
 ;-------------------------------------------------------------------------------
 ; Reset CDROM
 ;-------------------------------------------------------------------------------
+; Bank $00
+; Addr $E22A
+;
 gx_cd_reset:
           lda     cd_reset                  ; setting bit 2 will reset CDROM hardware
           ora     #$02
@@ -225,6 +322,9 @@ gx_unknown_e25c:
 ; Wait 7962 cycles.
 ; This should be enough for CDROM to be ready.
 ;-------------------------------------------------------------------------------
+; Bank $00
+; Addr $E267
+;
 gx_cd_wait:                                 ; A is the input parameter
           phx                               ; it will wait for A*(loop cycles)
           phy     
@@ -458,6 +558,9 @@ gx_negate:
 ;   A : CD status
 ;   X : Remaining number of 256 bytes blocs in the current sector 
 ;-------------------------------------------------------------------------------
+; Bank $00
+; Addr $E40F
+;
 gx_adpcm_read_to_ram:
           jsr     gx_negate     ; negates the number of bytes to read
 @start:                         
@@ -499,8 +602,13 @@ gx_adpcm_read_to_ram:
           and     #$f8
           sta     $222f
           rts     
+
 ; Same as gx_adpcm_read_to_ram but the read bytes are transfered to the VDC.
 ; Note that the VDC write register must have been set beforehand.
+;
+; Bank $00
+; Addr $E454
+;
 gx_adpcm_read_to_vdc:
           jsr     gx_negate
 @start:
@@ -586,6 +694,9 @@ le4db_00:
           stz     $2233
 le4e9_00:
           rts     
+
+; original extract missed the section from
+; $E4EA to $E513
 
 	.code
 	.bank $000
@@ -984,6 +1095,9 @@ gx_unknown_e817:
 le851_00:
           rts     
 
+; original extract missed the section from
+; $E852 to $E865
+
 	.code
 	.bank $000
 	.org $e865
@@ -1068,6 +1182,9 @@ le902_00:
 ; Reset process list.
 ; The process list will only contain "gx_wait_forever".
 ;-------------------------------------------------------------------------------
+; Bank $00
+; Addr $E903
+;
 gx_proc_reset:
           php                                   ; backup status register onto the stack
           sei                                   ; disable interrupts
@@ -1158,6 +1275,9 @@ gx_unknown_e95b:
 ; Return:
 ;   A : Process index.
 ;-------------------------------------------------------------------------------
+; Bank $00
+; Addr $E98C
+;
 gx_proc_load:
           lda     #$01                      ; lock process list
           tsb     gx_proc.lock
@@ -1281,6 +1401,10 @@ lea5b_00:
 
           brk     
 
+;
+; Bank $00
+; Addr $EA68
+;
 gx_wait_forever:
           cli     
 @loop:
@@ -1322,6 +1446,9 @@ leaa2_00:
 ;-------------------------------------------------------------------------------
 ; IRQ2 interrupt handler
 ;-------------------------------------------------------------------------------
+; Bank $00
+; Addr $EAA3
+;
 gx_irq_2:
           bbr1    <irq_m, leaa9_00
           jmp     [irq2_user_hook]
@@ -1338,6 +1465,9 @@ leaa9_00:
 ;-------------------------------------------------------------------------------
 ; "RESET" interrupt handler
 ;-------------------------------------------------------------------------------
+; Bank $00
+; Addr $EAB3
+;
 gx_irq_reset:
           csh                           ; switch CPU to high speed mode
           sei                           ; disable interrupts
@@ -1368,6 +1498,9 @@ leae1_00:
 ;-------------------------------------------------------------------------------
 ; 
 ;-------------------------------------------------------------------------------
+; Bank $00
+; Addr $EAEB
+;
 gx_update_scroll:
           stz     <$35                  ; reset scroll window MSB [todo]
           stz     <$38                  ; reset scroll window index
@@ -1668,6 +1801,10 @@ led11_00:
           jsr     gx_unknown_e9e4
           rts     
 
+;
+; Bank $00
+; Addr $ED15
+;
 gx_vdc_load_vram:
           lda     <$3b
 led17_00:
@@ -2041,6 +2178,11 @@ lefcb_00:
           stz     $24bf
           stz     $24c0
           rts     
+
+;
+; Bank $00
+; Addr $EFED
+;
 gx_vdc_init:
           lda     $f031
           sta     <vdc_control
@@ -2080,6 +2222,9 @@ gx_vdc_init:
           plp     
           rts     
 
+; Bank $00
+; Addr $F030
+;
 gx_vdc_init_table:
           .db $05,$8e,$03
           .db $06,$00,$00
@@ -2090,6 +2235,10 @@ gx_vdc_init_table:
           .db $0b,$1f,$04
           .db $0f,$01,$00
           .db $13,$00,$08
+;
+; Bank $00
+; Addr $F04B
+;
 gx_vce_init:
           lda     <$42
           bne     @vce_next_mode
@@ -2111,6 +2260,10 @@ gx_vce_init:
           dex     
           bne     @loop
           rts     
+;
+; Bank $00
+; Addr $F06E
+;
 gx_vdc_enable_display:
           lda     #$05
           sta     <vdc_reg
@@ -2120,6 +2273,10 @@ gx_vdc_enable_display:
           sta     <vdc_control
           sta     video_data_l
           rts     
+;
+; Bank $00
+; Addr $F07F
+;
 gx_vdc_disable_display:
           lda     #$05
           sta     <vdc_reg
@@ -2129,6 +2286,10 @@ gx_vdc_disable_display:
           sta     <vdc_control
           sta     video_data_l
           rts     
+;
+; Bank $00
+; Addr $F090
+;
 gx_vdc_set_ctrl_hi:
           tax     
           lda     #$05                      ; VDC control register
@@ -2141,9 +2302,17 @@ gx_vdc_set_ctrl_hi:
           sta     video_data_h
           rts     
 
+;
+; Bank $00
+; Addr $F0A5
+;
 gx_vdc_vram_auto_inc:
           .db $00,$08,$10,$18
 
+;
+; Bank $00
+; Addr $F0A9
+;
 gx_vdc_set_bat_size:
           tax     
           lda     gx_vdc_bat_size, X
@@ -2155,6 +2324,10 @@ gx_vdc_set_bat_size:
           sta     video_reg_l
           plp     
           rts     
+;
+; Bank $00
+; Addr $F0BB
+;
 gx_vdc_bat_size:
           .db $00,$10,$20,$30,$40,$50,$60,$70
 
@@ -2178,6 +2351,10 @@ lf0d6_00:
           plp     
           rts     
 
+;
+; Bank $00
+; Addr $F0E5
+;
 gx_vdc_set_yres:
           bit     #$01
           beq     @l0
