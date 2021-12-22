@@ -39,6 +39,7 @@
     { "name": "gx_unknown_e7a8", "logical": "e7a8", "page": "00" },
     { "name": "gx_unknown_e7e7", "logical": "e7e7", "page": "00" },
     { "name": "gx_unknown_e817", "logical": "e817", "page": "00" },
+    { "name": "gx_irq_2_unknown", "logical": "e865", "page": "00"},
 
     { "name": "gx_proc_reset", "logical": "e903", "page": "00" },
     { "name": "@loop", "logical": "e922", "page": "00" },

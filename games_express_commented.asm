@@ -186,18 +186,15 @@ gx_unknown_e000:
 ; $E111:
           jmp     gx_irq_reset
 
-; Bank $00
-; Addr $E114
-;
-gx_info_string:
+gx_info_string:                         ; bank: $000 logical: $e114
           db "SYSTEM KERNEL REV 2reserv_tbl_0 1993/04/18",$0d,$0a
           db "Created by Hack Technical Group",$0d,$0a
           db "Special thanks to Ryo",$0d,$0a,$00,
-gx_write_cd_fade_timer:
+gx_write_cd_fade_timer:                 ; bank: $000 logical: $e179
           and     #$0f
           sta     cd_fade_timer
           rts     
-gx_unknown_e17f:
+gx_unknown_e17f:                        ; bank: $000 logical: $e17f
           stz     <$20
           lda     #$35
           sta     <$21
@@ -214,11 +211,11 @@ gx_unknown_e17f:
           sta     <$22
           jsr     gx_unknown_e1a0
           tax     
-le19f_00:
+le19f_00:                               ; bank: $000 logical: $e19f
           rts     
-gx_unknown_e1a0:
+gx_unknown_e1a0:                        ; bank: $000 logical: $e1a0
           tii     $2020, $2207, $0008
-le1a7_00:
+le1a7_00:                               ; bank: $000 logical: $e1a7
           jsr     gx_unknown_e25c
           lda     #$de
           sta     $2210
@@ -241,9 +238,9 @@ le1a7_00:
           bcs     le1e6_00
           tii     $2207, $2020, $0008
           jmp     le1a7_00
-le1e6_00:
+le1e6_00:                               ; bank: $000 logical: $e1e6
           rts     
-gx_unknown_e1e7:
+gx_unknown_e1e7:                        ; bank: $000 logical: $e1e7
           lda     cd_status
           and     #$f8
           sta     $222f
@@ -252,7 +249,7 @@ gx_unknown_e1e7:
           cmp     #$c8
           beq     le1fa_00
           jmp     gx_unknown_e1e7
-le1fa_00:
+le1fa_00:                               ; bank: $000 logical: $e1fa
           cly     
           lda     cd_command
           sta     [$21], Y
@@ -260,7 +257,7 @@ le1fa_00:
           inc     <$21
           bne     le209_00
           inc     <$22
-le209_00:
+le209_00:                               ; bank: $000 logical: $e209
           sec     
           lda     <$23
           sbc     #$01
@@ -270,7 +267,7 @@ le209_00:
           sta     <$24
           ora     <$23
           bne     gx_unknown_e1e7
-le21a_00:
+le21a_00:                               ; bank: $000 logical: $e21a
           lda     cd_status
           and     #$f8
           sta     $222f
@@ -282,10 +279,7 @@ le21a_00:
 ;-------------------------------------------------------------------------------
 ; Reset CDROM
 ;-------------------------------------------------------------------------------
-; Bank $00
-; Addr $E22A
-;
-gx_cd_reset:
+gx_cd_reset:                            ; bank: $000 logical: $e22a
           lda     cd_reset                  ; setting bit 2 will reset CDROM hardware
           ora     #$02
           sta     cd_reset
@@ -299,8 +293,7 @@ gx_cd_reset:
           dex     
           bne     @loop
           rts     
-
-gx_unknown_e245:
+gx_unknown_e245:                        ; bank: $000 logical: $e245
           jsr     gx_unknown_e25c
           stz     $2210
           jsr     gx_unknown_e28b
@@ -310,10 +303,10 @@ gx_unknown_e245:
           jsr     gx_unknown_e532
           sec     
           rts     
-le25a_00:
+le25a_00:                               ; bank: $000 logical: $e25a
           clc     
           rts     
-gx_unknown_e25c:
+gx_unknown_e25c:                        ; bank: $000 logical: $e25c
           stz     $2211
           tii     $2211, $2212, $0008
           rts     
@@ -322,10 +315,7 @@ gx_unknown_e25c:
 ; Wait 7962 cycles.
 ; This should be enough for CDROM to be ready.
 ;-------------------------------------------------------------------------------
-; Bank $00
-; Addr $E267
-;
-gx_cd_wait:                                 ; A is the input parameter
+gx_cd_wait:                             ; bank: $000 logical: $e267                                 ; A is the input parameter
           phx                               ; it will wait for A*(loop cycles)
           phy     
 @l0:                                        ; loop cycles cycles:
@@ -342,8 +332,7 @@ gx_cd_wait:                                 ; A is the input parameter
           ply     
           plx     
           rts     
-
-gx_unknown_e279:
+gx_unknown_e279:                        ; bank: $000 logical: $e279
           lda     #$80
           tsb     cd_control
 le27e_00:
@@ -355,7 +344,7 @@ le27e_00:
           rts     
 gx_unknown_e28b:
           stz     $220f
-le28e_00:
+le27e_00:                               ; bank: $000 logical: $e28e
           lda     #$81                      ; try to send command prefix $81, $ff
           sta     cd_command
           tst     #$80, cd_status
@@ -369,33 +358,33 @@ le28e_00:
           sta     cd_command
           tst     #$40, cd_status
           beq     le28e_00
-le2b1_00:
+le2b1_00:                               ; bank: $000 logical: $e2b1
           jsr     gx_unknown_e279
-le2b4_00:
-          tst     #$40, $cd_status
+le2b4_00:                               ; bank: $000 logical: $e2b4
+          tst     #$40, cd_status
           bne     le2b1_00
-          tst     #$80, $cd_status
+          tst     #$80, cd_status
           bne     le2b4_00
           bra     le28e_00
-le2c2_00:
+le2c2_00:                               ; bank: $000 logical: $e2c2
           sta     cd_status
           clx     
-le2c6_00:
+le2c6_00:                               ; bank: $000 logical: $e2c6
           lda     cd_status
           and     #$40
           bne     le2d8_00
           lda     #$5a
-le2cf_00:
+le2cf_00:                               ; bank: $000 logical: $e2cf
           dec     A
           bne     le2cf_00
           nop     
           dex     
           bne     le2c6_00
           bra     le28e_00
-le2d8_00:
+le2d8_00:                               ; bank: $000 logical: $e2d8
           stz     $222f
           clx     
-le2dc_00:
+le2dc_00:                               ; bank: $000 logical: $e2dc
           lda     cd_status
           and     #$f8
           sta     $222f
@@ -409,7 +398,7 @@ le2dc_00:
           cmp     #$80
           beq     le308_00
           bra     le2dc_00
-le2f8_00:
+le2f8_00:                               ; bank: $000 logical: $e2f8
           lda     $2210, X
           inx     
           sta     cd_command
@@ -419,7 +408,7 @@ le2f8_00:
           nop     
           jsr     gx_unknown_e279
           bra     le2dc_00
-le308_00:
+le308_00:                               ; bank: $000 logical: $e308
           lda     $2206
           bne     le339_00
           lda     $2210
@@ -428,9 +417,9 @@ le308_00:
           lda     $2211
           cmp     #$01
           beq     le339_00
-le31b_00:
+le31b_00:                               ; bank: $000 logical: $e31b
           ldx     <$33
-le31d_00:
+le31d_00:                               ; bank: $000 logical: $e31d
           lda     cd_status
           and     #$f8
           sta     $222f
@@ -445,10 +434,9 @@ le31d_00:
           bcc     le31d_00
           lda     #$01
           sta     $220f
-le339_00:
+le339_00:                               ; bank: $000 logical: $e339
           rts     
-
-gx_unknown_e33a:
+gx_unknown_e33a:                        ; bank: $000 logical: $e33a
           tii     $2020, $2207, $0008
           jsr     gx_unknown_e25c
           lda     #$08
@@ -469,7 +457,7 @@ gx_unknown_e33a:
           jsr     gx_unknown_e28b
           cmp     #$c8
           bne     le393_00
-le36d_00:
+le36d_00:                               ; bank: $000 logical: $e36d
           lda     <$21
           tam     #$06
           lda     #$00
@@ -489,7 +477,7 @@ le36d_00:
           sbc     #$04
           beq     le393_00
           bpl     le36d_00
-le393_00:
+le393_00:                               ; bank: $000 logical: $e393
           pla     
           tam     #$06
           jsr     gx_unknown_e4cd
@@ -499,10 +487,10 @@ le393_00:
           bcs     le3ac_00
           tii     $2207, $2020, $0008
           jmp     gx_unknown_e33a
-le3ac_00:
+le3ac_00:                               ; bank: $000 logical: $e3ac
           stz     $2246
           rts     
-le3b0_00:
+le3b0_00:                               ; bank: $000 logical: $e3b0
           jsr     gx_unknown_e28b
           cmp     #$c8
           bne     le3ed_00
@@ -520,7 +508,7 @@ le3b0_00:
           lda     #$02
           sta     vdc_reg
           sta     video_reg_l
-le3da_00:
+le3da_00:                               ; bank: $000 logical: $e3da
           lda     #$00
           sta     <$17
           lda     #$08
@@ -530,7 +518,7 @@ le3da_00:
           bne     le3ed_00
           dec     <$23
           bne     le3da_00
-le3ed_00:
+le3ed_00:                               ; bank: $000 logical: $e3ed
           jsr     gx_unknown_e4cd
           cmp     #$00
           beq     le3ac_00
@@ -538,7 +526,7 @@ le3ed_00:
           bcs     le3ac_00
           tii     $2207, $2020, $0008
           jmp     gx_unknown_e33a
-gx_negate:
+gx_negate:                              ; bank: $000 logical: $e403
           cla     
           sec     
           sbc     <$17
@@ -558,10 +546,7 @@ gx_negate:
 ;   A : CD status
 ;   X : Remaining number of 256 bytes blocs in the current sector 
 ;-------------------------------------------------------------------------------
-; Bank $00
-; Addr $E40F
-;
-gx_adpcm_read_to_ram:
+gx_adpcm_read_to_ram:                   ; bank: $000 logical: $e40f
           jsr     gx_negate     ; negates the number of bytes to read
 @start:                         
           lda     cd_status     ; wait until cdrom is ready
@@ -606,10 +591,7 @@ gx_adpcm_read_to_ram:
 ; Same as gx_adpcm_read_to_ram but the read bytes are transfered to the VDC.
 ; Note that the VDC write register must have been set beforehand.
 ;
-; Bank $00
-; Addr $E454
-;
-gx_adpcm_read_to_vdc:
+gx_adpcm_read_to_vdc:                   ; bank: $000 logical: $e454
           jsr     gx_negate
 @start:
           lda     cd_status
@@ -651,7 +633,7 @@ gx_adpcm_read_to_vdc:
           cla     
           sbc     <$18
           sta     <$18
-le49a_00:
+le49a_00:                               ; bank: $000 logical: $e49a
           lda     cd_status
           and     #$f8
           sta     $222f
@@ -660,7 +642,7 @@ le49a_00:
           cmp     #$d8
           beq     le4c4_00
           jmp     le49a_00
-le4ad_00:
+le4ad_00:                               ; bank: $000 logical: $e4ad
           cly     
           lda     cd_command
           sta     [$15], Y
@@ -668,31 +650,30 @@ le4ad_00:
           inc     <$15
           bne     le4bc_00
           inc     <$16
-le4bc_00:
+le4bc_00:                               ; bank: $000 logical: $e4bc
           inc     <$17
           bne     le49a_00
           inc     <$18
           bne     le49a_00
-le4c4_00:
+le4c4_00:                               ; bank: $000 logical: $e4c4
           lda     cd_status
           and     #$b8
           sta     $222f
           rts     
-
-gx_unknown_e4cd:
+gx_unknown_e4cd:                        ; bank: $000 logical: $e4cd
           lda     $220f
           beq     le4db_00
           stz     $220f
           jsr     gx_cd_reset
           lda     #$06
           rts     
-le4db_00:
+le4db_00:                               ; bank: $000 logical: $e4db
           jsr     le4ea_00                          ; what the hell?
           jsr     gx_unknown_e513
           lda     $2232
           bne     le4e9_00
           stz     $2233
-le4e9_00:
+le4e9_00:                               ; bank: $000 logical: $e4e9
           rts     
 
 ; original extract missed the section from
@@ -701,26 +682,26 @@ le4e9_00:
 	.code
 	.bank $000
 	.org $e513
-gx_unknown_e513:
+gx_unknown_e513:                        ; bank: $000 logical: $e513
           php     
           sei     
-le515_00:
+le515_00:                               ; bank: $000 logical: $e515
           lda     cd_status
           and     #$f8
           cmp     #$f8
           beq     le520_00
           bra     le515_00
-le520_00:
+le520_00:                               ; bank: $000 logical: $e520
           lda     cd_command
           sta     $222f
           jsr     gx_unknown_e279
           plp     
-le52a_00:
+le52a_00:                               ; bank: $000 logical: $e52a
           lda     cd_status
           and     #$80
           bmi     le52a_00
           rts     
-gx_unknown_e532:
+gx_unknown_e532:                        ; bank: $000 logical: $e532
           cmp     #$06
           beq     le582_00
           cmp     #$02
@@ -756,15 +737,15 @@ gx_unknown_e532:
           cmp     #$2c
           beq     le584_00
           bra     le582_00
-le57f_00:
+le57f_00:                               ; bank: $000 logical: $e57f
           sta     $2231
-le582_00:
+le582_00:                               ; bank: $000 logical: $e582
           clc     
           rts     
-le584_00:
+le584_00:                               ; bank: $000 logical: $e584
           sec     
           rts     
-gx_unknown_e586:
+gx_unknown_e586:                        ; bank: $000 logical: $e586
           stz     $2225
           tii     $2225, $2226, $0009
           jsr     gx_unknown_e25c
@@ -784,7 +765,7 @@ gx_unknown_e586:
           lda     #$00
           sta     <$18
           jsr     le48f_00
-le5b7_00:
+le5b7_00:                               ; bank: $000 logical: $e5b7
           jsr     gx_unknown_e4cd
           pha     
           cmp     #$00
@@ -793,12 +774,12 @@ le5b7_00:
           sta     $2230
           lda     $222e
           sta     $2233
-le5cb_00:
+le5cb_00:                               ; bank: $000 logical: $e5cb
           pla     
           rts     
-gx_unknown_e5cd:
+gx_unknown_e5cd:                        ; bank: $000 logical: $e5cd
           tii     $2020, $2207, $0008
-le5d4_00:
+le5d4_00:                               ; bank: $000 logical: $e5d4
           jsr     gx_unknown_e25c
           lda     #$80
           sta     $2219
@@ -813,10 +794,10 @@ le5d4_00:
           jsr     gx_unknown_e532
           bcc     le5f6_00
           rts     
-le5f6_00:
+le5f6_00:                               ; bank: $000 logical: $e5f6
           tii     $2207, $2020, $0008
           jmp     le5d4_00
-le600_00:
+le600_00:                               ; bank: $000 logical: $e600
           jsr     gx_unknown_e25c
           lda     #$d9
           sta     $2210
@@ -834,7 +815,7 @@ le600_00:
           cmp     #$04
           bne     le62a_00
           lda     $223b
-le62a_00:
+le62a_00:                               ; bank: $000 logical: $e62a
           sta     $223b
           cmp     #$01
           beq     le660_00
@@ -844,12 +825,12 @@ le62a_00:
           lda     #$20
           tsb     cd_control
           bra     le660_00
-le63f_00:
+le63f_00:                               ; bank: $000 logical: $e63f
           lda     $2211
           cmp     #$04
           bne     le649_00
           sta     $223b
-le649_00:
+le649_00:                               ; bank: $000 logical: $e649
           jsr     gx_unknown_e4cd
           cmp     #$00
           beq     le65f_00
@@ -857,12 +838,12 @@ le649_00:
           bcs     le65f_00
           tii     $2207, $2020, $0008
           jmp     le600_00
-le65f_00:
+le65f_00:                               ; bank: $000 logical: $e65f
           rts     
-le660_00:
+le660_00:                               ; bank: $000 logical: $e660
           lda     #$00
           rts     
-le663_00:
+le663_00:                               ; bank: $000 logical: $e663
           lda     #$3c
           sta     <$21
           lda     #$22
@@ -872,7 +853,7 @@ le663_00:
           beq     le676_00
           lda     #$00
           rts     
-le676_00:
+le676_00:                               ; bank: $000 logical: $e676
           jsr     gx_unknown_e25c
           lda     #$da
           sta     $2210
@@ -882,11 +863,11 @@ le676_00:
           beq     le68d_00
           jsr     gx_unknown_e532
           bcc     le663_00
-le68d_00:
+le68d_00:                               ; bank: $000 logical: $e68d
           rts     
-le68e_00:
+le68e_00:                               ; bank: $000 logical: $e68e
           tii     $2020, $2207, $0008
-le695_00:
+le695_00:                               ; bank: $000 logical: $e695
           jsr     gx_unknown_e25c
           lda     #$dd
           sta     $2210
@@ -900,7 +881,7 @@ le695_00:
           lda     #$00
           sta     <$24
           jsr     gx_unknown_e1e7
-le6b4_00:
+le6b4_00:                               ; bank: $000 logical: $e6b4
           jsr     gx_unknown_e4cd
           tax     
           beq     le6c9_00
@@ -908,9 +889,9 @@ le6b4_00:
           bcs     le6c9_00
           tii     $2207, $2020, $0008
           jmp     le695_00
-le6c9_00:
+le6c9_00:                               ; bank: $000 logical: $e6c9
           rts     
-le6ca_00:
+le6ca_00:                               ; bank: $000 logical: $e6ca
           lda     #$03
           tsb     adpcm_addr_ctrl
           lda     #$01
@@ -918,7 +899,7 @@ le6ca_00:
           lda     #$02
           trb     adpcm_addr_ctrl
           rts     
-gx_unknown_e6da:
+gx_unknown_e6da:                        ; bank: $000 logical: $e6da
           lda     #$0c
           tsb     adpcm_addr_ctrl
           lda     #$04
@@ -926,28 +907,28 @@ gx_unknown_e6da:
           lda     #$08
           trb     adpcm_addr_ctrl
           rts     
-gx_unknown_e6ea:
+gx_unknown_e6ea:                        ; bank: $000 logical: $e6ea
           lda     adpcm_status
           and     #$01
           bne     le6f6_00
           lda     bram_lock
           and     #$04
-le6f6_00:
+le6f6_00:                               ; bank: $000 logical: $e6f6
           tax     
           lda     adpcm_addr_ctrl
           and     #$20
           bne     le703_00
           lda     adpcm_status
           and     #$08
-le703_00:
+le703_00:                               ; bank: $000 logical: $e703
           rts     
-le704_00:
+le704_00:                               ; bank: $000 logical: $e704
           lda     #$10
           tsb     adpcm_addr_ctrl
           lda     #$10
           trb     adpcm_addr_ctrl
           rts     
-le70f_00:
+le70f_00:                               ; bank: $000 logical: $e70f
           lda     cd_status
           and     #$f8
           sta     $222f
@@ -956,26 +937,26 @@ le70f_00:
           cmp     #$d8
           beq     le72f_00
           bra     le70f_00
-le721_00:
+le721_00:                               ; bank: $000 logical: $e721
           lda     adpcm_addr_l
           sta     adpcm_ram_offset
-le727_00:
-          tst     #$04, $180c
+le727_00:                               ; bank: $000 logical: $e727
+          tst     #$04, adpcm_status
           bne     le727_00
           bra     le70f_00
-le72f_00:
+le72f_00:                               ; bank: $000 logical: $e72f
           lda     cd_status
           and     #$b8
           sta     $222f
           rts     
-gx_unknown_e738:
-          tst     #$03, $180b
+gx_unknown_e738:                        ; bank: $000 logical: $e738
+          tst     #$03, adpcm_dma_ctrl
           beq     le742_00
           lda     #$ff
           bra     le793_00
-le742_00:
+le742_00:                               ; bank: $000 logical: $e742
           tii     $2020, $2207, $0008
-le749_00:
+le749_00:                               ; bank: $000 logical: $e749
           tii     $2021, adpcm_addr_l, $0002
           jsr     le6ca_00
           jsr     gx_unknown_e25c
@@ -993,7 +974,7 @@ le749_00:
           cmp     #$c8
           bne     le779_00
           jsr     le70f_00
-le779_00:
+le779_00:                               ; bank: $000 logical: $e779
           jsr     gx_unknown_e4cd
           cmp     #$00
           beq     le793_00
@@ -1003,9 +984,9 @@ le779_00:
           lda     $2233
           cmp     #$10
           bcc     le749_00
-le793_00:
+le793_00:                               ; bank: $000 logical: $e793
           rts     
-gx_adpcm_reset:
+gx_adpcm_reset:                         ; bank: $000 logical: $e794
           lda     #$80
           sta     adpcm_addr_ctrl
           stz     adpcm_addr_ctrl
@@ -1014,9 +995,9 @@ gx_adpcm_reset:
           trb     cd_control                ; clear all bits except bits 4 and 7
           stz     adpcm_playback_rate
           rts     
-gx_unknown_e7a8:
+gx_unknown_e7a8:                        ; bank: $000 logical: $e7a8
           jsr     gx_adpcm_reset
-le7ab_00:
+le7ab_00:                               ; bank: $000 logical: $e7ab
           jsr     gx_unknown_e6ea
           bne     le7ab_00
           tii     $201a, adpcm_addr_l, $0002
@@ -1024,50 +1005,50 @@ le7ab_00:
           tii     $201e, adpcm_addr_l, $0002
           jsr     le704_00
           lda     adpcm_ram_offset
-le7c7_00:
-          tst     #$80, $180c
+le7c7_00:                               ; bank: $000 logical: $e7c7
+          tst     #$80, adpcm_status
           bne     le7c7_00
           lda     adpcm_ram_offset
           sta     [$1c]
           inc     <$1c
           bne     le7d8_00
           inc     <$1d
-le7d8_00:
+le7d8_00:                               ; bank: $000 logical: $e7d8
           lda     <$1e
           bne     le7de_00
           dec     <$1f
-le7de_00:
+le7de_00:                               ; bank: $000 logical: $e7de
           dec     <$1e
           lda     <$1e
           ora     <$1f
           bne     le7c7_00
           rts     
-gx_unknown_e7e7:
-          tst     #$03, $180b
+gx_unknown_e7e7:                        ; bank: $000 logical: $e7e7
+          tst     #$03, adpcm_dma_ctrl
           bne     le816_00
           tii     $201a, adpcm_addr_l, $0002
           jsr     le6ca_00
-le7f7_00:
+le7f7_00:                               ; bank: $000 logical: $e7f7
           lda     [$1c]
           sta     adpcm_ram_offset
-le7fc_00:
-          tst     #$04, $180c
+le7fc_00:                               ; bank: $000 logical: $e7fc
+          tst     #$04, adpcm_status
           bne     le7fc_00
           inc     <$1c
           bne     le808_00
           inc     <$1d
-le808_00:
+le808_00:                               ; bank: $000 logical: $e808
           lda     <$1e
           bne     le80e_00
           dec     <$1f
-le80e_00:
+le80e_00:                               ; bank: $000 logical: $e80e
           dec     <$1e
           lda     <$1e
           ora     <$1f
           bne     le7f7_00
-le816_00:
+le816_00:                               ; bank: $000 logical: $e816
           rts     
-gx_unknown_e817:
+gx_unknown_e817:                        ; bank: $000 logical: $e817
           jsr     gx_unknown_e6ea
           bne     le851_00
           lda     <$1d
@@ -1092,16 +1073,20 @@ gx_unknown_e817:
           lda     #$60
           sta     adpcm_addr_ctrl
           cla     
-le851_00:
+le851_00:                               ; bank: $000 logical: $e851
           rts     
-
-; original extract missed the section from
-; $E852 to $E865
-
-	.code
-	.bank $000
-	.org $e865
-gx_irq_2_unknown:                           ; cd irq
+le852_00:                               ; bank: $000 logical: $e852
+          lda     #$08
+          tsb     adpcm_addr_ctrl
+          lda     adpcm_ram_offset
+          lda     #$05
+le85c_00:                               ; bank: $000 logical: $e85c
+          dec     A
+          bne     le85c_00
+          lda     #$08
+          trb     adpcm_addr_ctrl
+          rts     
+gx_irq_2_unknown:                       ; bank: $000 logical: $e865
           lda     cd_control
           and     bram_lock 
           ora     <$19                      ; 2019 contains a copy of cd_control
@@ -1112,7 +1097,7 @@ gx_irq_2_unknown:                           ; cd irq
           lda     #$04
           trb     <$19
           cli     
-le87c_00:
+le87c_00:                               ; bank: $000 logical: $e87c
           bbr5    <$19, le8d9_00
           lda     #$20                      ; bit 5 is set: data transfer done?
           trb     cd_control                ; clear bit 5
@@ -1122,19 +1107,19 @@ le87c_00:
           lda     $2206
           beq     le891_00
           stz     adpcm_dma_ctrl
-le891_00:
+le891_00:                               ; bank: $000 logical: $e891
           lda     cd_command
           sta     $2232
           lda     #$80
           tsb     cd_control
-le89c_00:
+le89c_00:                               ; bank: $000 logical: $e89c
           tst     #$40, cd_status
           bne     le89c_00
           php     
           sei     
           lda     #$80
           trb     cd_control
-le8a9_00:
+le8a9_00:                               ; bank: $000 logical: $e8a9
           lda     cd_status
           and     #$f8
           cmp     #$f8
@@ -1143,12 +1128,12 @@ le8a9_00:
           lda     #$80
           tsb     cd_control
           plp     
-le8bb_00:
+le8bb_00:                               ; bank: $000 logical: $e8bb
           tst     #$40, cd_status
           bne     le8bb_00
           lda     #$80
           trb     cd_control
-le8c6_00:
+le8c6_00:                               ; bank: $000 logical: $e8c6
           tst     #$80, cd_status
           bne     le8c6_00
           lda     $2206
@@ -1156,7 +1141,7 @@ le8c6_00:
           stz     $2206
           lda     #$04
           tsb     cd_control
-le8d9_00:
+le8d9_00:                               ; bank: $000 logical: $e8d9
           bbr4    <$19, le8f1_00
           lda     #$10                              ; subchannel fifo something ?
           trb     cd_control
@@ -1167,7 +1152,7 @@ le8d9_00:
           sta     $2234
           lda     #$10
           tsb     cd_control
-le8f1_00:
+le8f1_00:                               ; bank: $000 logical: $e8f1
           bbr3    <$19, le902_00                    ; adpcm end reached
           lda     #$0c
           trb     cd_control
@@ -1175,17 +1160,14 @@ le8f1_00:
           trb     <$19
           lda     #$60
           trb     adpcm_addr_ctrl
-le902_00:
+le902_00:                               ; bank: $000 logical: $e902
           rts  
 
 ;-------------------------------------------------------------------------------
 ; Reset process list.
 ; The process list will only contain "gx_wait_forever".
 ;-------------------------------------------------------------------------------
-; Bank $00
-; Addr $E903
-;
-gx_proc_reset:
+gx_proc_reset:                          ; bank: $000 logical: $e903
           php                                   ; backup status register onto the stack
           sei                                   ; disable interrupts
           stz     gx_proc.lock                  ; reset process list lock
@@ -1223,18 +1205,17 @@ gx_proc_reset:
           ; Count the number of process to run.
           ldx     #$04
           cly     
-le942_00:
+le942_00:                               ; bank: $000 logical: $e942
           lda     $228b, X
           cmp     #$00
           beq     le94a_00
           iny     
-le94a_00:
+le94a_00:                               ; bank: $000 logical: $e94a
           dex     
           bpl     le942_00
           tya     
-          rts   
-
-gx_unknown_e94f:
+          rts     
+gx_unknown_e94f:                        ; bank: $000 logical: $e94f
           php     
           sei     
           stz     $2290, X
@@ -1242,8 +1223,7 @@ gx_unknown_e94f:
           sta     $228b, X
           plp     
           rts     
-          
-gx_unknown_e95b:
+gx_unknown_e95b:                        ; bank: $000 logical: $e95b
           lda     #$01
           tsb     gx_proc.lock
           stx     <$29
@@ -1275,10 +1255,7 @@ gx_unknown_e95b:
 ; Return:
 ;   A : Process index.
 ;-------------------------------------------------------------------------------
-; Bank $00
-; Addr $E98C
-;
-gx_proc_load:
+gx_proc_load:                           ; bank: $000 logical: $e98c
           lda     #$01                      ; lock process list
           tsb     gx_proc.lock
           stx     <$29                      ; set data pointer
@@ -1312,21 +1289,20 @@ le996_00:                                   ; search for the first empty entry i
           trb     gx_proc.lock              ; unlock process list
           txa     
           rts     
-
-gx_unknown_e9cc:
+gx_unknown_e9cc:                        ; bank: $000 logical: $e9cc
           ldx     gx_proc.last
           lda     #$00
           sta     $228b, X
           jmp     lea55_00
-gx_unknown_e9d7:
+gx_unknown_e9d7:                        ; bank: $000 logical: $e9d7
           cpx     gx_proc.last
           beq     gx_unknown_e9cc
           lda     #$00
           sta     $228b, X
           rts     
-gx_unknown_e9e2:
+gx_unknown_e9e2:                        ; bank: $000 logical: $e9e2
           lda     #$01
-gx_unknown_e9e4:
+gx_unknown_e9e4:                        ; bank: $000 logical: $e9e4
           pha     
           lda     #$01
           tsb     gx_proc.lock
@@ -1354,7 +1330,7 @@ gx_unknown_e9e4:
           lda     #$02
           sta     $228b, X
           jmp     lea5a_00
-gx_unknown_ea19:
+gx_unknown_ea19:                        ; bank: $000 logical: $ea19
           phx     
           ldx     gx_proc.last
           sta     gx_proc.reg_a, X
@@ -1375,7 +1351,7 @@ gx_unknown_ea19:
           lda     #$04
           sta     $228b, X
           ldx     #$04
-lea41_00:
+lea41_00:                               ; bank: $000 logical: $ea41
           lda     $228b, X
           cmp     #$02
           bne     lea52_00
@@ -1383,15 +1359,15 @@ lea41_00:
           bne     lea52_00
           lda     #$04
           sta     $228b, X
-lea52_00:
+lea52_00:                               ; bank: $000 logical: $ea52
           dex     
           bpl     lea41_00
-lea55_00:
+lea55_00:                               ; bank: $000 logical: $ea55
           lda     #$01
           tsb     gx_proc.lock
-lea5a_00:
+lea5a_00:                               ; bank: $000 logical: $ea5a
           clx     
-lea5b_00:
+lea5b_00:                               ; bank: $000 logical: $ea5b
           lda     $228b, X
           cmp     #$04
           beq     lea6b_00
@@ -1401,16 +1377,11 @@ lea5b_00:
 
           brk     
 
-;
-; Bank $00
-; Addr $EA68
-;
-gx_wait_forever:
+gx_wait_forever:                        ; bank: $000 logical: $ea68
           cli     
-@loop:
+@loop:                                  ; bank: $000 logical: $ea69
           bra     @loop
-
-lea6b_00:
+lea6b_00:                               ; bank: $000 logical: $ea6b
           stx     gx_proc.last
           lda     #$01
           ora     $22b8, X
@@ -1435,24 +1406,21 @@ lea6b_00:
           lda     gx_proc.reg_a, X
           plx     
           rti     
-gx_irq_nmi:
-          rti
-gx_irq_timer:     
+gx_irq_nmi:                             ; bank: $000 logical: $ea9b
+          rti     
+gx_irq_timer:                           ; bank: $000 logical: $ea9c
           bbr2    <irq_m, leaa2_00
           jmp     [irq_timer_user_hook]
-leaa2_00:
+leaa2_00:                               ; bank: $000 logical: $eaa2
           rti     
 
 ;-------------------------------------------------------------------------------
 ; IRQ2 interrupt handler
 ;-------------------------------------------------------------------------------
-; Bank $00
-; Addr $EAA3
-;
-gx_irq_2:
+gx_irq_2:                               ; bank: $000 logical: $eaa3
           bbr1    <irq_m, leaa9_00
           jmp     [irq2_user_hook]
-leaa9_00:
+leaa9_00:                               ; bank: $000 logical: $eaa9
           pha     
           phx     
           phy     
@@ -1465,10 +1433,7 @@ leaa9_00:
 ;-------------------------------------------------------------------------------
 ; "RESET" interrupt handler
 ;-------------------------------------------------------------------------------
-; Bank $00
-; Addr $EAB3
-;
-gx_irq_reset:
+gx_irq_reset:                           ; bank: $000 logical: $eab3
           csh                           ; switch CPU to high speed mode
           sei                           ; disable interrupts
           cld                           ; clear decimal flag
@@ -1480,7 +1445,7 @@ gx_irq_reset:
           tii     $2000, $2001, $00ff
           stz     $2200                 ; clear bss
           tii     $2200, $2201, $1dff
-gx_soft_reset:
+gx_soft_reset:                          ; bank: $000 logical: $ead1
           sei                           ; disable interrupts
           stz     timer_ctrl            ; disable CPU timer
           csh                           ; switch CPU to high speed mode
@@ -1498,10 +1463,7 @@ leae1_00:
 ;-------------------------------------------------------------------------------
 ; 
 ;-------------------------------------------------------------------------------
-; Bank $00
-; Addr $EAEB
-;
-gx_update_scroll:
+gx_update_scroll:                       ; bank: $000 logical: $eaeb
           stz     <$35                  ; reset scroll window MSB [todo]
           stz     <$38                  ; reset scroll window index
           lda     <gx_scroll_x
@@ -1513,8 +1475,7 @@ gx_update_scroll:
           lda     <gx_scroll_y+1
           sta     <vdc_scroll_y+1
           rts     
-
-gx_unknown_eb00:
+gx_unknown_eb00:                        ; bank: $000 logical: $eb00
           lda     $24c0
           sta     <$39
           lda     $24bf
@@ -1528,7 +1489,7 @@ gx_unknown_eb00:
           beq     leb1f_00
           lda     #$c0                  ; enable display (background and sprites)
           tsb     <vdc_control
-leb1f_00:
+leb1f_00:                               ; bank: $000 logical: $eb1f
           lda     $24c1
           and     #$0f
           eor     #$ff
@@ -1538,7 +1499,7 @@ leb1f_00:
           bpl     leb6a_00
           stz     $24bf
           bra     leb52_00
-leb34_00:
+leb34_00:                               ; bank: $000 logical: $eb34
           lda     $24c1
           and     #$0f
           clc     
@@ -1548,25 +1509,25 @@ leb34_00:
           asl     A
           cmp     $24c2
           bcc     leb6a_00
-leb48_00:
+leb48_00:                               ; bank: $000 logical: $eb48
           lda     $24c2
           sta     $24bf
           lda     #$c0                  ; disable display.
           trb     <vdc_control
-leb52_00:
+leb52_00:                               ; bank: $000 logical: $eb52
           lda     #$20
           tsb     $24c1
           bra     leb6a_00
-leb59_00:
+leb59_00:                               ; bank: $000 logical: $eb59
           lda     #$10
           bit     $24c1
           bne     leb65_00
           tsb     $24c1
           bra     leb6a_00
-leb65_00:
+leb65_00:                               ; bank: $000 logical: $eb65
           lda     #$40
           trb     $24c1
-leb6a_00:
+leb6a_00:                               ; bank: $000 logical: $eb6a
           st0     #$08
           lda     <vdc_scroll_y
           clc     
@@ -1575,7 +1536,7 @@ leb6a_00:
           lda     <vdc_scroll_y+1
           bcc     leb79_00
           inc     A
-leb79_00:
+leb79_00:                               ; bank: $000 logical: $eb79
           sta     video_data_h
           st0     #$0c                      ; vertical synchro register
           lda     $24c6
@@ -1596,10 +1557,10 @@ leb79_00:
           adc     <$39
           sta     video_data_l
           rts     
-gx_irq_1:
+gx_irq_1:                               ; bank: $000 logical: $eba5
           bbr0    <irq_m, @gx_irq1
           jmp     [irq1_user_hook]
-@gx_irq1:
+@gx_irq1:                               ; bank: $000 logical: $ebab
           pha     
           phx     
           phy     
@@ -1615,7 +1576,7 @@ gx_irq_1:
           st1     #$00
           sta     video_data_h
           lda     <vdc_status
-@check_spr_or:
+@check_spr_or:                          ; bank: $000 logical: $ebc8
           bit     #$02                          ; test for sprites overflow 
           beq     @check_vsync
           inc     $2049                         ; ?!
@@ -1625,11 +1586,11 @@ gx_irq_1:
           st0     #$05
           sta     video_data_l
           lda     <vdc_status
-@check_vsync:
+@check_vsync:                           ; bank: $000 logical: $ebdc
           bit     #$20                          ; test for vsync
           bne     @vsync
           jmp     lec5a_00
-@vsync:
+@vsync:                                 ; bank: $000 logical: $ebe3
           lda     <$35
           sta     <$37                          ; [todo] scroll window data pointer MSB
           bne     lec24_00                      ; if != 0 => scroll window update else set scroll from "global" values
@@ -1645,13 +1606,13 @@ gx_irq_1:
           bvc     @scroll_y
           jsr     gx_unknown_eb00
           bra     @update_scroll
-@scroll_y:
+@scroll_y:                              ; bank: $000 logical: $ec05
           st0     #$08                          ; set Y scroll
           lda     <vdc_scroll_y
           sta     video_data_l
           lda     <vdc_scroll_y+1
           sta     video_data_h
-@update_scroll:
+@update_scroll:                         ; bank: $000 logical: $ec11
           lda     <gx_scroll_x
           sta     <vdc_scroll_x
           lda     <gx_scroll_x+1
@@ -1661,7 +1622,7 @@ gx_irq_1:
           lda     <gx_scroll_y+1
           sta     <vdc_scroll_y+1
           jmp     lec2d_00
-lec24_00:
+lec24_00:                               ; bank: $000 logical: $ec24
           lda     <$34
           sta     <$36                          ; set scroll data pointer LSB
           stz     <$38                          ; reset scroll window index
@@ -1687,18 +1648,18 @@ lec2d_00:
           plx     
           pla     
           jmp     gx_unknown_ea19
-lec5a_00:
+lec5a_00:                               ; bank: $000 logical: $ec5a
           lda     <$37
           beq     lec66_00
           ldx     #$0f
-lec60_00:
+lec60_00:                               ; bank: $000 logical: $ec60
           dex     
           bpl     lec60_00
           jsr     gx_unknown_ec6f
-lec66_00:
+lec66_00:                               ; bank: $000 logical: $ec66
           lda     <vdc_reg
           sta     video_reg_l
-lec6b_00:
+lec6b_00:                               ; bank: $000 logical: $ec6b
           ply     
           plx     
           pla     
@@ -1722,9 +1683,9 @@ gx_unknown_ec6f:                        ; [todo] hsync process
           st0     #$05
           sta     video_data_l
           jmp     lece1_00              ; set X and Y scroll register (same as 0)
-lec90_00:
+lec90_00:                               ; bank: $000 logical: $ec90
           rts     
-lec91_00:
+lec91_00:                               ; bank: $000 logical: $ec91
           iny     
           st0     #$07
           lda     <vdc_scroll_x
@@ -1784,103 +1745,102 @@ lecf2_00:
           sta     video_data_h
           sty     <$38                  ; save index
           rts     
-
-gx_unknown_ed03:
+gx_unknown_ed03:                        ; bank: $000 logical: $ed03
           stz     $22c6
-          rts  
-
-gx_unknown_ed07:
+          rts     
+gx_unknown_ed07:                        ; bank: $000 logical: $ed07
           lda     $22c6
           rts     
-
-gx_unknown_ed0b:
+gx_unknown_ed0b:                        ; bank: $000 logical: $ed0b
           lda     $22c6
           bne     led11_00
-            rts     
-led11_00:
-          jsr     gx_unknown_e9e4
           rts     
+led11_00:                               ; bank: $000 logical: $ed11
+          jsr     gx_unknown_e9e4
+          rts
 
-;
-; Bank $00
-; Addr $ED15
-;
-gx_vdc_load_vram:
+;-------------------------------------------------------------------------------
+; 
+; 203a, 203b: source address
+; 22c1, 22c2: VRAM destination address
+; 22c7      : source bank (mapped to mpr 2, 3)
+;-------------------------------------------------------------------------------
+gx_vdc_load_vram:                       ; bank: $000 logical: $ed15
           lda     <$3b
-led17_00:
-          cmp     #$60
-          bcc     led22_00
-          sbc     #$20
-          inc     $22c7
+led17_00:                               ; bank: $000 logical: $ed17
+          cmp     #$60                  ; remap source pointer
+          bcc     led22_00              ;     while ptr.hi >= 0x60
+          sbc     #$20                  ;         ptr.hi -= 0x20
+          inc     $22c7                 ;         bank++
           bra     led17_00
-led22_00:
+led22_00:                               ; bank: $000 logical: $ed22
           sta     <$3b
           stz     $22c0
-          lda     #$05
+          lda     #$05                  ; disable sprite and background display
           sta     <vdc_reg
           sta     video_reg_l
           lda     <vdc_control+1
           and     #$e7
           sta     <vdc_control+1
           sta     video_data_h
-          lda     #$00
+          lda     #$00                  ; set VRAM write pointer
           sta     <vdc_reg
           sta     video_reg_l
           lda     $22c1
           sta     video_data_l
           lda     $22c2
           sta     video_data_h
-          lda     #$02
+          lda     #$02                  ; write to VRAM data register
           sta     <vdc_reg
           sta     video_reg_l
-          lda     $22c1
-          asl     A
+          lda     $22c1                 ; $22c8.w = $22c2.w << 1
+          asl     A                     ; Why?
           sta     $22c3
           lda     $22c2
           rol     A
           sta     $22c4
-          tma     #$02
+          tma     #$02                  ; save mpr #2 to $22c8
           sta     $22c8
-          tma     #$03
+          tma     #$03                  ; save mpr #3 to $22c9
           sta     $22c9
-          lda     $22c7
+          lda     $22c7                 ; map $22c7 to mpr #2 and the next one to mpr #3
           tam     #$02
           inc     A
           tam     #$03
-          lda     [$3a]
+          lda     [$3a]                 ; 1st byte : bloc count ?
           sta     $22c6
           inc     <$3a
           bne     led7c_00
           inc     <$3b
-led7c_00:
+led7c_00:                               ; bank: $000 logical: $ed7c
           clx     
           bra     ledcb_00
           lda     $22c6
           bne     led85_00
           rts     
-led85_00:
+led85_00:                               ; bank: $000 logical: $ed85
           lda     #$05
-          sta     <vdc_reg
+          sta     <vdc_reg              ;  disable sprite and background display
           sta     video_reg_l
           lda     <vdc_control+1
           and     #$e7
           sta     <vdc_control+1
           sta     video_data_h
-          lda     #$00
+          lda     #$00                  ; set VRAM write pointer
           sta     <vdc_reg
           sta     video_reg_l
           lda     $22c1
           sta     video_data_l
           lda     $22c2
           sta     video_data_h
-          lda     #$02
+          lda     #$02                  ; write to VRAM data register
           sta     <vdc_reg
           sta     video_reg_l
-          tma     #$02
+          tma     #$02                  ; save mpr #2 to $22c8
           sta     $22c8
-          tma     #$03
+          tma     #$03                  ; save mpr #3 to $22c9
           sta     $22c9
-          lda     $22c7
+          lda     $22c7                 ;  map $22c7 to mpr #2 and the next one to mpr #3
           tam     #$02
           inc     A
           tam     #$03
@@ -1888,8 +1848,8 @@ led85_00:
           beq     ledcb_00
           lda     <$3f
           sta     video_data_l
-ledcb_00:
-          lda     <$3b
+ledcb_00:                               ; bank: $000 logical: $edcb
+          lda     <$3b                  ; remap pointer 
           cmp     #$60
           bcc     leddc_00
           sbc     #$20
@@ -1898,16 +1858,16 @@ ledcb_00:
           tam     #$02
           inc     A
           tam     #$03
-leddc_00:
-          lda     [$3a]
-          cmp     #$ff
+leddc_00:                               ; bank: $000 logical: $eddc
+          lda     [$3a]                 ; this is some kind of control byte?
+          cmp     #$ff                  ; $ff: end of data stream?
           beq     leded_00
-          bit     #$80
-          beq     lee1e_00
+          bit     #$80                  
+          beq     lee1e_00              ; bit 7 cleared
           bit     #$40
-          beq     lee51_00
+          beq     lee51_00              ; bit 6 cleared
           jmp     gx_vdc_write
-leded_00:
+leded_00:                               ; bank: $000 logical: $eded
           dec     $22c6
           lda     $22c4
           lsr     A
@@ -1930,7 +1890,7 @@ leded_00:
           lda     $22c9
           tam     #$03
           rts     
-lee1e_00:
+lee1e_00:                               ; bank: $000 logical: $ee1e
           bit     #$40
           bne     lee80_00
           and     #$3f
@@ -1940,7 +1900,7 @@ lee1e_00:
           sta     $22c3
           bcc     lee33_00
           inc     $22c4
-lee33_00:
+lee33_00:                               ; bank: $000 logical: $ee33
           lda     [$3a], Y
           sta     video_data_l, X
           iny     
@@ -1958,7 +1918,7 @@ lee33_00:
           adc     <$3b
           sta     <$3b
           jmp     ledcb_00
-lee51_00:
+lee51_00:                               ; bank: $000 logical: $ee51
           and     #$3f
           sta     <$3e
           ldy     #$01
@@ -1966,11 +1926,11 @@ lee51_00:
           sta     $22c3
           bcc     lee62_00
           inc     $22c4
-lee62_00:
+lee62_00:                               ; bank: $000 logical: $ee62
           lda     [$3a], Y
           sta     <$3f
-lee66_00:
-          sta     video_data_l, X
+lee66_00:                               ; bank: $000 logical: $ee66
+          sta     video_data_l, X       ; looks like some RLE encoding?
           sax     
           eor     #$01
           sax     
@@ -1984,7 +1944,7 @@ lee66_00:
           adc     <$3b
           sta     <$3b
           jmp     ledcb_00
-lee80_00:
+lee80_00:                               ; bank: $000 logical: $ee80
           and     #$3f
           sta     <$3e
           asl     A
@@ -1992,7 +1952,7 @@ lee80_00:
           sta     $22c3
           bcc     lee90_00
           inc     $22c4
-lee90_00:
+lee90_00:                               ; bank: $000 logical: $ee90
           ldy     #$01
           lda     [$3a], Y
           sta     <$3c
@@ -2005,8 +1965,8 @@ lee90_00:
           sta     <$3a
           bcc     leea5_00
           inc     <$3b
-leea5_00:
-          lda     <$3c
+leea5_00:                               ; bank: $000 logical: $eea5
+          lda     <$3c                  ; RLE encoding but with a word?
           sta     video_data_l, X
           txa     
           eor     #$01
@@ -2020,12 +1980,12 @@ leea5_00:
           inc     <$3c
           bne     leebe_00
           inc     <$3d
-leebe_00:
+leebe_00:                               ; bank: $000 logical: $eebe
           dec     <$3e
           bne     leea5_00
           sta     <$3f
           jmp     ledcb_00
-gx_vdc_write:
+gx_vdc_write:                           ; bank: $000 logical: $eec7
           and     #$3f
           sta     <$3e
           asl     A
@@ -2033,8 +1993,8 @@ gx_vdc_write:
           sta     $22c3
           bcc     @loop
           inc     $22c4
-@loop:
-          ldy     #$01
+@loop:                                  ; bank: $000 logical: $eed7
+          ldy     #$01                  ; raw data copy?
           lda     [$3a], Y
           sta     video_data_l, X
           txa     
@@ -2057,7 +2017,7 @@ gx_vdc_write:
           adc     #$00
           sta     <$3b
           jmp     ledcb_00
-gx_unknown_ef02:
+gx_unknown_ef02:                        ; bank: $000 logical: $ef02
           lda     #$40
           sta     $22ca
           lda     #$5e
@@ -2065,14 +2025,14 @@ gx_unknown_ef02:
           lda     #$80
           sta     $22cc
           rts     
-gx_unknown_ef12:
+gx_unknown_ef12:                        ; bank: $000 logical: $ef12
           lda     $22ca
           eor     $22cb
           and     #$02
           clc     
           beq     lef1e_00
           sec     
-lef1e_00:
+lef1e_00:                               ; bank: $000 logical: $ef1e
           ror     $22ca
           ror     $22cb
           ror     $22cc
@@ -2090,13 +2050,13 @@ lef1e_00:
           lda     #$00
           adc     #$ff
           rts     
-gx_read_joypad:
+gx_read_joypad:                         ; bank: $000 logical: $ef41
           cly     
           lda     #$01
           sta     joyport
           lda     #$03
           sta     joyport
-@read_loop:
+@read_loop:                             ; bank: $000 logical: $ef4c
           lda     #$01
           sta     joyport
           pha     
@@ -2133,7 +2093,7 @@ gx_read_joypad:
           cpy     #$05
           bcc     @read_loop
           cly     
-@check_soft_reset:
+@check_soft_reset:                      ; bank: $000 logical: $ef95
           lda     $22cd
           and     $efb4, Y
           beq     @next_joypad
@@ -2144,7 +2104,7 @@ gx_read_joypad:
           cmp     #$0c
           bne     @next_joypad
           jmp     gx_soft_reset
-@next_joypad:
+@next_joypad:                           ; bank: $000 logical: $efae
           iny     
           cpy     #$05
           bcc     @check_soft_reset
@@ -2159,9 +2119,9 @@ gx_read_joypad:
           asl     <$07
           bbs7    <$ff, lefcb_00
           bbs7    <$ff, lefc8_00
-gx_display_init:
+gx_display_init:                        ; bank: $000 logical: $efc9
           stz     <gx_scroll_x
-lefcb_00:
+lefcb_00:                               ; bank: $000 logical: $efcb
           stz     <gx_scroll_x+1
           stz     <gx_scroll_y
           stz     <gx_scroll_y+1
@@ -2178,12 +2138,7 @@ lefcb_00:
           stz     $24bf
           stz     $24c0
           rts     
-
-;
-; Bank $00
-; Addr $EFED
-;
-gx_vdc_init:
+gx_vdc_init:                            ; bank: $000 logical: $efed
           lda     $f031
           sta     <vdc_control
           lda     $f032
@@ -2195,7 +2150,7 @@ gx_vdc_init:
           php     
           sei     
           ldy     #$00
-@vdc_set_reg:
+@vdc_set_reg:                           ; bank: $000 logical: $f003
           lda     [$00], Y
           iny     
           sta     video_reg_l
@@ -2209,23 +2164,21 @@ gx_vdc_init:
           bne     @vdc_set_reg
           lda     <$42
           beq     @skip
-@vdc_xres_341:
+@vdc_xres_341:                          ; bank: $000 logical: $f01d
           st0     #$0a
           st1     #$02
           st2     #$05
           st0     #$0b
           st1     #$27
           st2     #$04
-@skip:
+@skip:                                  ; bank: $000 logical: $f029
           lda     #$e8
           jsr     gx_vdc_set_yres
           plp     
           rts     
 
-; Bank $00
-; Addr $F030
-;
-gx_vdc_init_table:
+gx_vdc_init_table:                      ; bank: $000 logical: $f030
+
           .db $05,$8e,$03
           .db $06,$00,$00
           .db $07,$00,$00
@@ -2235,24 +2188,20 @@ gx_vdc_init_table:
           .db $0b,$1f,$04
           .db $0f,$01,$00
           .db $13,$00,$08
-;
-; Bank $00
-; Addr $F04B
-;
-gx_vce_init:
+gx_vce_init:                            ; bank: $000 logical: $f04b
           lda     <$42
           bne     @vce_next_mode
           lda     #$04                  ; blur edges + 5MHz dot clock
           bra     @vce_clear
-@vce_next_mode:
+@vce_next_mode:                         ; bank: $000 logical: $f053
           lda     #$05                  ; blur edges + 7MHz dot clock
-@vce_clear:
+@vce_clear:                             ; bank: $000 logical: $f055
           sta     color_ctrl
           stz     color_reg_l           ; clear all palette colors
           stz     color_reg_h           ; well... there's only 512 color entries
           ldx     #$04                  ; but this loops set 4*256=1024 colors to 0.
           cly     
-@loop:
+@loop:                                  ; bank: $000 logical: $f061
           stz     color_data_l
           stz     color_data_h
           dey     
@@ -2260,11 +2209,7 @@ gx_vce_init:
           dex     
           bne     @loop
           rts     
-;
-; Bank $00
-; Addr $F06E
-;
-gx_vdc_enable_display:
+gx_vdc_enable_display:                  ; bank: $000 logical: $f06e
           lda     #$05
           sta     <vdc_reg
           sta     video_reg_l
@@ -2273,11 +2218,7 @@ gx_vdc_enable_display:
           sta     <vdc_control
           sta     video_data_l
           rts     
-;
-; Bank $00
-; Addr $F07F
-;
-gx_vdc_disable_display:
+gx_vdc_disable_display:                 ; bank: $000 logical: $f07f
           lda     #$05
           sta     <vdc_reg
           sta     video_reg_l
@@ -2286,11 +2227,7 @@ gx_vdc_disable_display:
           sta     <vdc_control
           sta     video_data_l
           rts     
-;
-; Bank $00
-; Addr $F090
-;
-gx_vdc_set_ctrl_hi:
+gx_vdc_set_ctrl_hi:                     ; bank: $000 logical: $f090
           tax     
           lda     #$05                      ; VDC control register
           sta     <vdc_reg
@@ -2302,18 +2239,10 @@ gx_vdc_set_ctrl_hi:
           sta     video_data_h
           rts     
 
-;
-; Bank $00
-; Addr $F0A5
-;
-gx_vdc_vram_auto_inc:
-          .db $00,$08,$10,$18
+gx_vdc_vram_auto_inc:                   ; bank: $000 logical: $f0a5
 
-;
-; Bank $00
-; Addr $F0A9
-;
-gx_vdc_set_bat_size:
+          .db $00,$08,$10,$18
+gx_vdc_set_bat_size:                    ; bank: $000 logical: $f0a9
           tax     
           lda     gx_vdc_bat_size, X
           php     
@@ -2324,14 +2253,11 @@ gx_vdc_set_bat_size:
           sta     video_reg_l
           plp     
           rts     
-;
-; Bank $00
-; Addr $F0BB
-;
-gx_vdc_bat_size:
-          .db $00,$10,$20,$30,$40,$50,$60,$70
 
-gx_unknown_f0c3:
+gx_vdc_bat_size:                        ; bank: $000 logical: $f0bb
+
+          .db $00,$10,$20,$30,$40,$50,$60,$70
+gx_unknown_f0c3:                        ; bank: $000 logical: $f0c3
           php     
           sei     
           ora     #$40
@@ -2342,7 +2268,7 @@ gx_unknown_f0c3:
           stz     $24c0
           plp     
           rts     
-lf0d6_00:
+lf0d6_00:                               ; bank: $000 logical: $f0d6
           jsr     gx_vdc_disable_display
           lda     $24c2
           lsr     A
@@ -2350,16 +2276,11 @@ lf0d6_00:
           sta     $24c0
           plp     
           rts     
-
-;
-; Bank $00
-; Addr $F0E5
-;
-gx_vdc_set_yres:
+gx_vdc_set_yres:                        ; bank: $000 logical: $f0e5
           bit     #$01
           beq     @l0
           inc     A
-@l0:
+@l0:                                    ; bank: $000 logical: $f0ea
           sta     $24c2
           stz     $24c3
           eor     #$ff
@@ -2396,7 +2317,7 @@ gx_vdc_set_yres:
           sta     <vdc_reg
           sta     video_reg_l
           rts     
-gx_unknown_f145:
+gx_unknown_f145:                        ; bank: $000 logical: $f145
           cla     
           jsr     gx_vdc_set_ctrl_hi
           lda     #$00
@@ -2411,7 +2332,7 @@ gx_unknown_f145:
 	.code
 	.bank $000
 	.org $f16a
-gx_vdc_enable_interrupts:
+gx_vdc_enable_interrupts:               ; bank: $000 logical: $f16a
           lda     #$05
           sta     <vdc_reg
           sta     video_reg_l
@@ -2421,8 +2342,7 @@ gx_vdc_enable_interrupts:
           sta     video_data_l
           stz     irq_disable
           rts     
-
-gx_vdc_set_control_reg:
+gx_vdc_set_control_reg:                 ; bank: $000 logical: $f17e
           lda     #$03
           sta     irq_disable               ; disable IRQ1 and IRQ2
           lda     #$05
@@ -2432,11 +2352,10 @@ gx_vdc_set_control_reg:
           and     #$f3
           sta     <vdc_control
           sta     video_data_l
-          rts  
-   
-gx_unknown_f194:
+          rts     
+gx_unknown_f194:                        ; bank: $000 logical: $f194
           cly     
-lf195_00:
+lf195_00:                               ; bank: $000 logical: $f195
           lda     [$04], Y
           cmp     #$ff
           beq     lf1b0_00
@@ -2452,30 +2371,30 @@ lf195_00:
           adc     #$00
           sta     <$01
           bra     lf195_00
-lf1b0_00:
+lf1b0_00:                               ; bank: $000 logical: $f1b0
           rts     
-lf1b1_00:
+lf1b1_00:                               ; bank: $000 logical: $f1b1
           cly     
           ldx     <$06
           beq     lf1c4_00
-lf1b6_00:
+lf1b6_00:                               ; bank: $000 logical: $f1b6
           lda     [$00], Y
           sta     [$02], Y
           iny     
           bne     lf1c1_00
           inc     <$01
           inc     <$03
-lf1c1_00:
+lf1c1_00:                               ; bank: $000 logical: $f1c1
           dex     
           bne     lf1b6_00
-lf1c4_00:
+lf1c4_00:                               ; bank: $000 logical: $f1c4
           lda     <$07
           beq     lf1cc_00
           dec     <$07
           bra     lf1b6_00
-lf1cc_00:
+lf1cc_00:                               ; bank: $000 logical: $f1cc
           rts     
-gx_unknown_f1cd:
+gx_unknown_f1cd:                        ; bank: $000 logical: $f1cd
           asl     A
           asl     A
           asl     A
@@ -2485,13 +2404,13 @@ gx_unknown_f1cd:
           adc     #$00
           sta     color_reg_h
           rts     
-gx_unknown_f1db:
+gx_unknown_f1db:                        ; bank: $000 logical: $f1db
           sta     <$02
           lda     #$01
           sta     <$03
           lda     $2303
           clx     
-lf1e5_00:
+lf1e5_00:                               ; bank: $000 logical: $f1e5
           lsr     A
           bcc     lf208_00
           asl     <$03
@@ -2503,7 +2422,7 @@ lf1e5_00:
           lda     <$02
           bsr     gx_unknown_f1cd
           cly     
-lf1f6_00:
+lf1f6_00:                               ; bank: $000 logical: $f1f6
           lda     [$00], Y
           sta     color_data_l
           iny     
@@ -2514,7 +2433,7 @@ lf1f6_00:
           bne     lf1f6_00
           plp     
           rts     
-lf208_00:
+lf208_00:                               ; bank: $000 logical: $f208
           lda     <$02
           sta     $2314, X
           txa     
@@ -2525,7 +2444,7 @@ lf208_00:
           asl     A
           tax     
           cly     
-lf215_00:
+lf215_00:                               ; bank: $000 logical: $f215
           lda     [$00], Y
           sta     $2318, X
           inx     
@@ -2547,7 +2466,7 @@ lf215_00:
 ;-------------------------------------------------------------------------------
 ; Main routine
 ;-------------------------------------------------------------------------------
-gx_main:
+gx_main:                                ; bank: $000 logical: $f8a4
           jsr     gx_cd_reset                   ; reset cdrom drive
           jsr     gx_update_scroll
           jsr     gx_unknown_ed03
@@ -2577,30 +2496,30 @@ gx_main:
           lda     #$20
           sta     $2205
           bra     lf8f5_00
-lf8eb_00:
-          lda     #$80                          ; this is not a Super CDRom 2
+lf8eb_00:                               ; bank: $000 logical: $f8eb
+          lda     #$80
           sta     $2204
           lda     #$08
           sta     $2205
-lf8f5_00:
+lf8f5_00:                               ; bank: $000 logical: $f8f5
           lda     #$01
           tam     #$06
           jsr     gx_load_gfx_data
-lf8fc_00:
+lf8fc_00:                               ; bank: $000 logical: $f8fc
           jsr     gx_cd_reset
           jsr     gx_main_screen
           jsr     gx_adpcm_reset
           cla     
           jsr     gx_write_cd_fade_timer
-lf909_00:
+lf909_00:                               ; bank: $000 logical: $f909
           jsr     gx_cd_reset
-lf90c_00:
+lf90c_00:                               ; bank: $000 logical: $f90c
           jsr     gx_unknown_e245
           bcc     lf918_00
           lda     #$1e
           jsr     gx_unknown_e9e4
           bra     lf90c_00
-lf918_00:
+lf918_00:                               ; bank: $000 logical: $f918
           jsr     gx_unknown_e17f
           bne     lf96e_00
           lda     $2235
@@ -2615,11 +2534,11 @@ lf918_00:
           tst     #$04, $223f
           bne     lf93a_00
           jmp     lf96e_00
-lf93a_00:
+lf93a_00:                               ; bank: $000 logical: $f93a
           jsr     gx_unknown_fe3c
           bpl     lf942_00
           jmp     lf96e_00
-lf942_00:
+lf942_00:                               ; bank: $000 logical: $f942
           lda     #$78
           sta     <$00
           lda     #$f9
@@ -2641,31 +2560,31 @@ lf942_00:
           inc     A
           tam     #$06
           jmp     l6000_00
-lf96e_00:
+lf96e_00:                               ; bank: $000 logical: $f96e
           lda     #$01
           tam     #$06
           jsr     gx_unknown_c053
           jmp     lf8fc_00
 
-gx_boot:
+gx_boot:                                ; bank: $000 logical: $f978
           .db "BOOT"
           .dw gx_menu
           .db $40,$80
-gx_menu:
+gx_menu:                                ; bank: $000 logical: $f980
           jsr     led7f_00
           jsr     gx_unknown_e9e2
           jmp     gx_menu
-gx_vdc_clear_tiles:
+gx_vdc_clear_tiles:                     ; bank: $000 logical: $f989
           stz     <$46
           stz     <$47
           stz     <$48
           stz     <$49
           stz     <$4a
           jmp     gx_unknown_f996
-gx_unknown_f996:
+gx_unknown_f996:                        ; bank: $000 logical: $f996
           ldx     #$0f
           lda     #$ff
-lf99a_00:
+lf99a_00:                               ; bank: $000 logical: $f99a
           sta     $2791, X
           dex     
           bpl     lf99a_00
@@ -2689,7 +2608,7 @@ lf99a_00:
           sta     video_reg_l
           ldx     #$80                          
           ldx     #$00                          ; clear 256 tiles
-@loop:
+@loop:                                  ; bank: $000 logical: $f9d1
           st1     #$00
           st2     #$00
           st1     #$00
@@ -2705,7 +2624,7 @@ lf99a_00:
 	.code
 	.bank $000
 	.org $fe3c
-gx_unknown_fe3c:
+gx_unknown_fe3c:                        ; bank: $000 logical: $fe3c
           lda     #$80
           sta     $2021
           tam     #$02
@@ -2723,12 +2642,12 @@ gx_unknown_fe3c:
           sta     $2023
           jsr     gx_unknown_e33a
           ldx     #$04
-lfe61_00:
+lfe61_00:                               ; bank: $000 logical: $fe61
           lda     $ff2a, X
           cmp     $4001, X
           beq     lfe6c_00
           jmp     lff27_00
-lfe6c_00:
+lfe6c_00:                               ; bank: $000 logical: $fe6c
           dex     
           bpl     lfe61_00
           tii     $409e, $2025, $0003
@@ -2746,7 +2665,7 @@ lfe6c_00:
           sta     <$02
           lda     #$27
           sta     <$03
-lfe9b_00:
+lfe9b_00:                               ; bank: $000 logical: $fe9b
           lda     [$00]
           beq     lff10_00
           sta     <$06
@@ -2757,21 +2676,21 @@ lfe9b_00:
           cmp     #$04
           bcc     lfeaf_00
           lda     #$04
-lfeaf_00:
+lfeaf_00:                               ; bank: $000 logical: $feaf
           sta     <$08
           clx     
           iny     
-lfeb3_00:
+lfeb3_00:                               ; bank: $000 logical: $feb3
           cla     
           cpx     <$08
           bcs     lfeba_00
           lda     [$00], Y
-lfeba_00:
+lfeba_00:                               ; bank: $000 logical: $feba
           sta     [$02]
           inc     <$02
           bne     lfec2_00
           inc     <$03
-lfec2_00:
+lfec2_00:                               ; bank: $000 logical: $fec2
           iny     
           inx     
           cpx     #$04
@@ -2782,24 +2701,24 @@ lfec2_00:
           inc     <$02
           bne     lfed4_00
           inc     <$03
-lfed4_00:
+lfed4_00:                               ; bank: $000 logical: $fed4
           iny     
           lda     [$00], Y
           sta     [$02]
           inc     <$02
           bne     lfedf_00
           inc     <$03
-lfedf_00:
+lfedf_00:                               ; bank: $000 logical: $fedf
           iny     
           lda     [$00], Y
           sta     [$02]
           inc     <$02
           bne     lfeea_00
           inc     <$03
-lfeea_00:
+lfeea_00:                               ; bank: $000 logical: $feea
           ldy     #$0a
           clx     
-lfeed_00:
+lfeed_00:                               ; bank: $000 logical: $feed
           lda     [$00], Y
           sta     <$0a, X
           iny     
@@ -2811,7 +2730,7 @@ lfeed_00:
           inc     <$02
           bne     lff02_00
           inc     <$03
-lff02_00:
+lff02_00:                               ; bank: $000 logical: $ff02
           lda     <$06
           clc     
           adc     <$00
@@ -2820,13 +2739,13 @@ lff02_00:
           adc     <$01
           sta     <$01
           bra     lfe9b_00
-lff10_00:
+lff10_00:                               ; bank: $000 logical: $ff10
           lda     #$ff
           sta     [$02]
           inc     <$02
           bne     lff1a_00
           inc     <$03
-lff1a_00:
+lff1a_00:                               ; bank: $000 logical: $ff1a
           lda     <$02
           sta     $2265
           lda     <$03
@@ -2837,17 +2756,17 @@ lff1a_00:
 	.code
 	.bank $000
 	.org $ff75
-gx_unknown_ff75:
+gx_unknown_ff75:                        ; bank: $000 logical: $ff75
           jsr     lff2f_00
           bmi     lff7d_00
           jsr     gx_unknown_e33a
-lff7d_00:
+lff7d_00:                               ; bank: $000 logical: $ff7d
           rts     
 
 	.data
 	.bank $000
 	.org $fff6
-irq_vectors:
+irq_vectors:                            ; bank: $000 logical: $fff6
           .dw gx_irq_2
           .dw gx_irq_1
           .dw gx_irq_timer
@@ -2857,7 +2776,7 @@ irq_vectors:
 	.code
 	.bank $001
 	.org $c000
-gx_load_gfx_data:
+gx_load_gfx_data:                       ; bank: $001 logical: $c000
           jsr     gx_vdc_disable_display
           stz     <gx_scroll_x
           stz     <gx_scroll_x+1
@@ -2878,25 +2797,25 @@ gx_load_gfx_data:
           sta     video_reg_l
           tia     gx_bat_00, video_data_l, $0800
           lda     #$01
-          sta     $22c7
+          sta     $22c7                                 ; bank: $01
           lda     #$00
           sta     $22c1
           lda     #$10
-          sta     $22c2
+          sta     $22c2                                 ; VRAM destination: $1000
           lda     #$5f
           sta     <$3a
           lda     #$4d
-          sta     <$3b
+          sta     <$3b                                  ; source: $4d5f
           jsr     gx_vdc_load_vram
           jsr     gx_vdc_enable_display
           rts     
 
-gx_unknown_c053:
+gx_unknown_c053:                        ; bank: $001 logical: $c053
           jsr     gx_unknown_e9e2
           jsr     gx_unknown_f996
           jsr     gx_unknown_e9e2
           ldx     #$0a
-lc05e_01:
+lc05e_01:                               ; bank: $001 logical: $c05e
           phx     
           jsr     gx_unknown_f996
           lda     #$0a
@@ -2917,7 +2836,7 @@ lc05e_01:
 ;-------------------------------------------------------------------------------
 ; Display atlernatively 3 sprites and "boot" cdrom when the user presses RUN.
 ;-------------------------------------------------------------------------------
-gx_main_screen:
+gx_main_screen:                         ; bank: $001 logical: $c07f
           ldx     #$c0
           ldy     #$99                      ; [todo] what's at $c099?
           jsr     gx_proc_load

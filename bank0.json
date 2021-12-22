@@ -30,7 +30,7 @@
         "type": "code",
         "page": 0,
         "logical": "e513",
-        "size": "33f",
+        "size": "b1d",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
 
@@ -192,6 +192,15 @@
         "logical": "c55f",
         "size": "800",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "binary", "element_size": 2, "elements_per_line": 16 }
+    },
+    "gx_til_00": {
+        "filename": "gfx_bat_00.bin",
+        "type": "data",
+        "page": 1,
+        "logical": "4d5f",
+        "size": "800",
+        "mpr": ["ff", "f8", 1, 2, 0, 0, 1, 0 ],
         "data": { "type": "binary", "element_size": 2, "elements_per_line": 16 }
     }
 }
