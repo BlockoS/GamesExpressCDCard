@@ -29,6 +29,7 @@
 	{ "name": "@loop", "logical": "e471", "page": "00" },
     { "name": "@end", "logical": "e486", "page": "00" },
     { "name": "gx_unknown_e4cd", "logical": "e4cd", "page": "00" },
+    { "name": "gx_unknown_e513", "logical": "e513", "page": "00" },
     { "name": "gx_unknown_e532", "logical": "e532", "page": "00" },
     { "name": "gx_unknown_e586", "logical": "e586", "page": "00" },
     { "name": "gx_unknown_e5cd", "logical": "e5cd", "page": "00" },
@@ -98,7 +99,7 @@
     
     { "name": "gx_vdc_set_yres", "logical": "f0e5", "page": "00" },
     { "name": "@l0", "logical": "f0ea", "page": "00" },
-    { "name": "gx_unknown_f145", "logical": "f145", "page": "00" },
+    { "name": "gx_clear_bat", "logical": "f145", "page": "00" },
     { "name": "gx_vdc_set_control_reg", "logical": "f17e", "page": "00" },
     { "name": "gx_unknown_f194", "logical": "f194", "page": "00" },
     { "name": "gx_unknown_f1cd", "logical": "f1cd", "page": "00" },
@@ -109,6 +110,16 @@
     { "name": "gx_unknown_f996", "logical": "f996", "page": "00" },
 
     { "name": "@loop", "logical": "f9d1", "page":"00"},
+
+    { "name": "gx_unknown_fe3c", "logical": "fe3c", "page":"00"},
+
+    { "name": "gx_msg_no", "logical": "fcd0", "page":"00"},
+    { "name": "gx_msg_yes", "logical": "fcd4", "page":"00"},
+
+    { "name": "gx_msg_on", "logical": "fcdc", "page":"00"},
+    { "name": "gx_msg_off", "logical": "fce0", "page":"00"},
+
+    { "name": "gx_unknown_ff75", "logical": "ff75", "page":"00"},
 
     { "name": "irq_vectors", "logical": "fff6", "page": "00" },
     { "name": "video_reg_l", "logical": "0000", "page": "ff" },

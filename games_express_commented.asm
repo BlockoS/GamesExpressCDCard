@@ -114,7 +114,7 @@ gx_unknown_e000:
 ; $E0A5:
           jmp     gx_vdc_disable_display
 ; $E0A8:
-          jmp     gx_unknown_f145
+          jmp     gx_clear_bat
 ; $E0AB:
           jmp     gx_vdc_set_ctrl_hi
 ; $E0AE:
@@ -675,15 +675,28 @@ le4db_00:                               ; bank: $000 logical: $e4db
           stz     $2233
 le4e9_00:                               ; bank: $000 logical: $e4e9
           rts     
-
-; original extract missed the section from
-; $E4EA to $E513
-
-	.code
-	.bank $000
-	.org $e513
-gx_unknown_e513:                        ; bank: $000 logical: $e513
-          php     
+le4ea_00:                               ; bank: $000 logical: $e4ea
+          stz     $2232
+le4ed_00:                               ; bank: $000 logical: $e4ed
+          lda     cd_status
+          and     #$f8
+          sta     $222f
+          cmp     #$d8
+          beq     le4ff_00
+          cmp     #$f8
+          beq     le50a_00
+          bra     le4ed_00
+le4ff_00:                               ; bank: $000 logical: $e4ff
+          lda     cd_command
+          sta     $2232
+          jsr     gx_unknown_e279
+          bra     le4ed_00
+le50a_00:                               ; bank: $000 logical: $e50a
+          lda     cd_status
+          and     #$b8
+          sta     $222f
+          rts     
+gx_unknown_e513:                        ; bank: $000 logical: $e513php     
           sei     
 le515_00:                               ; bank: $000 logical: $e515
           lda     cd_status
@@ -2178,7 +2191,6 @@ gx_vdc_init:                            ; bank: $000 logical: $efed
           rts     
 
 gx_vdc_init_table:                      ; bank: $000 logical: $f030
-
           .db $05,$8e,$03
           .db $06,$00,$00
           .db $07,$00,$00
@@ -2188,6 +2200,7 @@ gx_vdc_init_table:                      ; bank: $000 logical: $f030
           .db $0b,$1f,$04
           .db $0f,$01,$00
           .db $13,$00,$08
+
 gx_vce_init:                            ; bank: $000 logical: $f04b
           lda     <$42
           bne     @vce_next_mode
@@ -2240,8 +2253,8 @@ gx_vdc_set_ctrl_hi:                     ; bank: $000 logical: $f090
           rts     
 
 gx_vdc_vram_auto_inc:                   ; bank: $000 logical: $f0a5
-
           .db $00,$08,$10,$18
+
 gx_vdc_set_bat_size:                    ; bank: $000 logical: $f0a9
           tax     
           lda     gx_vdc_bat_size, X
@@ -2255,8 +2268,8 @@ gx_vdc_set_bat_size:                    ; bank: $000 logical: $f0a9
           rts     
 
 gx_vdc_bat_size:                        ; bank: $000 logical: $f0bb
-
           .db $00,$10,$20,$30,$40,$50,$60,$70
+
 gx_unknown_f0c3:                        ; bank: $000 logical: $f0c3
           php     
           sei     
@@ -2292,46 +2305,57 @@ gx_vdc_set_yres:                        ; bank: $000 logical: $f0e5
           sta     $24c7
           lda     #$02
           sta     $24c6
-          lda     #$0d                      ; Vertical Display Register
+          lda     #$0d                  ; Vertical Display Register
           sta     <vdc_reg
           sta     video_reg_l
           lda     $24c2
           sta     video_data_l
           lda     $24c3
           sta     video_data_h
-          lda     #$0c                      ; Vertical Synchro Register
+          lda     #$0c                  ; Vertical Synchro Register
           sta     <vdc_reg
           sta     video_reg_l
           lda     $24c6
           sta     video_data_l
           lda     $24c7
           sta     video_data_h
-          lda     #$0e                      ; Vertical Display End Position Register
+          lda     #$0e                  ; Vertical Display End Position Register
           sta     <vdc_reg
           sta     video_reg_l
           lda     $24c4
           sta     video_data_l
           lda     $24c5
           sta     video_data_h
-          lda     #$02                      ; VRAM data register
+          lda     #$02                  ; VRAM data register
           sta     <vdc_reg
           sta     video_reg_l
           rts     
-gx_unknown_f145:                        ; bank: $000 logical: $f145
-          cla     
-          jsr     gx_vdc_set_ctrl_hi
-          lda     #$00
+;-------------------------------------------------------------------------------
+; This routine set BAT entries to $00f0.
+; Here it's assumed that the BAT size is 32x64.
+;-------------------------------------------------------------------------------
+gx_clear_bat:                           ; bank: $000 logical: $f145
+          cla                           ; set vram auto-increment to 1.
+          jsr     gx_vdc_set_ctrl_hi 
+          lda     #$00                  ; set VRAM write pointer to $0000
           sta     <vdc_reg
           sta     video_reg_l
           st1     #$00
           st2     #$00
-          lda     #$02
+          lda     #$02                  ; switch to VRAM data register
           sta     <vdc_reg
           sta     video_reg_l
+          ldx     #$08
+          ldy     #$00                  ; $0800 = 32*64
+@l0:                                    ; bank: $000 logical: $f15f
+            st1     #$f0
+            st2     #$00
+            dey     
+            bne     @l0
+          dex     
+          bne     @l0
+          rts     
 
-	.code
-	.bank $000
-	.org $f16a
 gx_vdc_enable_interrupts:               ; bank: $000 logical: $f16a
           lda     #$05
           sta     <vdc_reg
@@ -2344,9 +2368,9 @@ gx_vdc_enable_interrupts:               ; bank: $000 logical: $f16a
           rts     
 gx_vdc_set_control_reg:                 ; bank: $000 logical: $f17e
           lda     #$03
-          sta     irq_disable               ; disable IRQ1 and IRQ2
+          sta     irq_disable           ; disable IRQ1 and IRQ2
           lda     #$05
-          sta     <vdc_reg                  ; VDC control register
+          sta     <vdc_reg              ; VDC control register
           sta     video_reg_l
           lda     <vdc_control
           and     #$f3
@@ -2459,10 +2483,871 @@ lf215_00:                               ; bank: $000 logical: $f215
           tsb     $2303
           plp     
           rts     
+lf22d_00:                               ; bank: $000 logical: $f22d
+          lda     #$01
+          sta     <$04
+          lda     $2302
+          clx     
+lf235_00:                               ; bank: $000 logical: $f235
+          lsr     A
+          bcc     lf240_00
+          asl     <$04
+          inx     
+          cpx     #$04
+          bcc     lf235_00
+          rts     
+lf240_00:                               ; bank: $000 logical: $f240
+          lda     <$02
+          sta     $2304, X
+          lda     <$03
+          sta     $2308, X
+          lda     <$00
+          sta     $230c, X
+          lda     <$01
+          sta     $2310, X
+          php     
+          sei     
+          lda     #$20
+          tsb     <$11
+          lda     <$04
+          tsb     $2302
+          plp     
+          rts     
+lf261_00:                               ; bank: $000 logical: $f261
+          lda     $2304, X
+          sta     color_reg_l
+          lda     $2308, X
+          sta     color_reg_h
+          lda     $230c, X
+          sta     color_data_l
+          lda     $2310, X
+          sta     color_data_h
+          rts     
+gx_unknown_f27a:                        ; bank: $000 logical: $f27a
+          ldx     #$ff
+          lda     $2302
+lf27f_00:                               ; bank: $000 logical: $f27f
+          beq     lf28b_00
+          inx     
+          lsr     A
+          bcc     lf27f_00
+          tay     
+          bsr     lf261_00
+          tya     
+          bra     lf27f_00
+lf28b_00:                               ; bank: $000 logical: $f28b
+          lda     #$20
+          trb     <$11
+          stz     $2302
+          ldx     #$ff
+          lda     $2303
+lf297_00:                               ; bank: $000 logical: $f297
+          beq     lf2df_00
+          inx     
+          lsr     A
+          bcc     lf297_00
+          pha     
+          phx     
+          lda     $2314, X
+          jsr     gx_unknown_f1cd
+          txa     
+          asl     A
+          tax     
+          jmp     [$f2ab, X]
+          tst     #$f2, $f2be, X
+          cmp     #$f2
+          csh     
+          sbc     [$e3]
+          clc     
+          st2     #$04
+          tsb     <$20
+          brk     
+          plx     
+          pla     
+          bra     lf297_00
+          tia     $2338, color_data_l, $0020
+          plx     
+          pla     
+          bra     lf297_00
+          tia     $2358, color_data_l, $0020
+          plx     
+          pla     
+          bra     lf297_00
+          tia     $2378, color_data_l, $0020
+          plx     
+          pla     
+          bra     lf297_00
+lf2df_00:                               ; bank: $000 logical: $f2df
+          lda     #$10
+          trb     <$11
+          stz     $2303
+          jsr     lf3c4_00
+          bbs0    <$11, lf2ed_00
+          rts     
+lf2ed_00:                               ; bank: $000 logical: $f2ed
+          bbs1    <$11, lf334_00
+          ldy     $239d
+          clc     
+          ldx     #$03
+lf2f6_00:                               ; bank: $000 logical: $f2f6
+          lda     $245f, Y
+          adc     $239f, Y
+          sta     $245f, Y
+          lda     $23ff, Y
+          adc     #$00
+          sta     $23ff, Y
+          lda     $247f, Y
+          adc     $23bf, Y
+          sta     $247f, Y
+          lda     $241f, Y
+          adc     #$00
+          sta     $241f, Y
+          lda     $249f, Y
+          adc     $23df, Y
+          sta     $249f, Y
+          lda     $243f, Y
+          adc     #$00
+          sta     $243f, Y
+          dey     
+          dex     
+          bpl     lf2f6_00
+          tya     
+          sty     $239d
+          bmi     lf378_00
+          rts     
+lf334_00:                               ; bank: $000 logical: $f334
+          ldy     $239d
+          sec     
+          ldx     #$03
+lf33a_00:                               ; bank: $000 logical: $f33a
+          lda     $245f, Y
+          sbc     $239f, Y
+          sta     $245f, Y
+          lda     $23ff, Y
+          sbc     #$00
+          sta     $23ff, Y
+          lda     $247f, Y
+          sbc     $23bf, Y
+          sta     $247f, Y
+          lda     $241f, Y
+          sbc     #$00
+          sta     $241f, Y
+          lda     $249f, Y
+          sbc     $23df, Y
+          sta     $249f, Y
+          lda     $243f, Y
+          sbc     #$00
+          sta     $243f, Y
+          dey     
+          dex     
+          bpl     lf33a_00
+          tya     
+          sty     $239d
+          bmi     lf378_00
+          rts     
+lf378_00:                               ; bank: $000 logical: $f378
+          lda     #$0f
+          sta     $239d
+          jsr     lf3a2_00
+          lda     $239b
+          asl     A
+          asl     A
+          asl     A
+          asl     A
+          sta     color_reg_l
+          cla     
+          adc     #$00
+          sta     color_reg_h
+          tia     $22e2, color_data_l, $0020
+          dec     $2399
+          beq     lf39d_00
+          rts     
+lf39d_00:                               ; bank: $000 logical: $f39d
+          lda     #$03
+          trb     <$11
+          rts     
+lf3a2_00:                               ; bank: $000 logical: $f3a2
+          clx     
+          cly     
+lf3a4_00:                               ; bank: $000 logical: $f3a4
+          lda     $241f, Y
+          asl     A
+          asl     A
+          asl     A
+          ora     $23ff, Y
+          asl     A
+          asl     A
+          asl     A
+          ora     $243f, Y
+          sta     $22e2, X
+          lda     #$00
+          rol     A
+          sta     $22e3, X
+          inx     
+          inx     
+          iny     
+          cpy     #$10
+          bne     lf3a4_00
+          rts     
+lf3c4_00:                               ; bank: $000 logical: $f3c4
+          bbs2    <$11, lf3c8_00
+          rts     
+lf3c8_00:                               ; bank: $000 logical: $f3c8
+          bbs3    <$11, lf40f_00
+          ldy     $239e
+          clc     
+          ldx     #$03
+lf3d1_00:                               ; bank: $000 logical: $f3d1
+          lda     $246f, Y
+          adc     $23af, Y
+          sta     $246f, Y
+          lda     $240f, Y
+          adc     #$00
+          sta     $240f, Y
+          lda     $248f, Y
+          adc     $23cf, Y
+          sta     $248f, Y
+          lda     $242f, Y
+          adc     #$00
+          sta     $242f, Y
+          lda     $24af, Y
+          adc     $23ef, Y
+          sta     $24af, Y
+          lda     $244f, Y
+          adc     #$00
+          sta     $244f, Y
+          dey     
+          dex     
+          bpl     lf3d1_00
+          tya     
+          sty     $239e
+          bmi     lf453_00
+          rts     
+lf40f_00:                               ; bank: $000 logical: $f40f
+          ldy     $239e
+          sec     
+          ldx     #$03
+lf415_00:                               ; bank: $000 logical: $f415
+          lda     $246f, Y
+          sbc     $23af, Y
+          sta     $246f, Y
+          lda     $240f, Y
+          sbc     #$00
+          sta     $240f, Y
+          lda     $248f, Y
+          sbc     $23cf, Y
+          sta     $248f, Y
+          lda     $242f, Y
+          sbc     #$00
+          sta     $242f, Y
+          lda     $24af, Y
+          sbc     $23ef, Y
+          sta     $24af, Y
+          lda     $244f, Y
+          sbc     #$00
+          sta     $244f, Y
+          dey     
+          dex     
+          bpl     lf415_00
+          tya     
+          sty     $239e
+          bmi     lf453_00
+          rts     
+lf453_00:                               ; bank: $000 logical: $f453
+          lda     #$0f
+          sta     $239e
+          jsr     lf47d_00
+          lda     $239c
+          asl     A
+          asl     A
+          asl     A
+          asl     A
+          sta     color_reg_l
+          cla     
+          adc     #$00
+          sta     color_reg_h
+          tia     $22e2, color_data_l, $0020
+          dec     $239a
+          beq     lf478_00
+          rts     
+lf478_00:                               ; bank: $000 logical: $f478
+          lda     #$0c
+          trb     <$11
+          rts     
+lf47d_00:                               ; bank: $000 logical: $f47d
+          clx     
+          cly     
+lf47f_00:                               ; bank: $000 logical: $f47f
+          lda     $242f, Y
+          asl     A
+          asl     A
+          asl     A
+          ora     $240f, Y
+          asl     A
+          asl     A
+          asl     A
+          ora     $244f, Y
+          sta     $22e2, X
+          lda     #$00
+          rol     A
+          sta     $22e3, X
+          inx     
+          inx     
+          iny     
+          cpy     #$10
+          bne     lf47f_00
+          rts     
+lf49f_00:                               ; bank: $000 logical: $f49f
+          lda     #$0f
+          trb     <$11
+          rts     
+lf4a4_00:                               ; bank: $000 logical: $f4a4
+          pha     
+          lda     #$03
+          trb     <$11
+          pla     
+          sta     $239b
+          stz     $2398
+          jsr     lf537_00
+          ldx     #$0f
+          stx     $239d
+lf4b8_00:                               ; bank: $000 logical: $f4b8
+          stz     $241f, X
+          stz     $243f, X
+          stz     $23ff, X
+          dex     
+          bpl     lf4b8_00
+          lda     #$10
+          sta     $2399
+          lda     #$01
+          tsb     <$11
+          rts     
+lf4ce_00:                               ; bank: $000 logical: $f4ce
+          pha     
+          lda     #$0c
+          trb     <$11
+          pla     
+          sta     $239c
+          lda     #$10
+          sta     $2398
+          jsr     lf537_00
+          ldx     #$0f
+          stx     $239e
+lf4e4_00:                               ; bank: $000 logical: $f4e4
+          stz     $242f, X
+          stz     $244f, X
+          stz     $240f, X
+          dex     
+          bpl     lf4e4_00
+          lda     #$10
+          sta     $239a
+          lda     #$04
+          tsb     <$11
+          rts     
+lf4fa_00:                               ; bank: $000 logical: $f4fa
+          pha     
+          lda     #$03
+          trb     <$11
+          pla     
+          sta     $239b
+          stz     $2398
+          jsr     lf537_00
+          ldy     #$0f
+          sty     $239d
+          lda     #$10
+          sta     $2399
+          lda     #$03
+          tsb     <$11
+          rts     
+lf518_00:                               ; bank: $000 logical: $f518
+          pha     
+          lda     #$0c
+          trb     <$11
+          pla     
+          sta     $239c
+          lda     #$10
+          sta     $2398
+          jsr     lf537_00
+          ldy     #$0f
+          sty     $239e
+          iny     
+          sty     $239a
+          lda     #$0c
+          tsb     <$11
+          rts     
+lf537_00:                               ; bank: $000 logical: $f537
+          ldy     #$1f
+lf539_00:                               ; bank: $000 logical: $f539
+          lda     [$00], Y
+          sta     $22e2, Y
+          dey     
+          bpl     lf539_00
+          cly     
+          lda     $2398
+          and     #$10
+          tax     
+          clc     
+          adc     #$10
+          sta     $2398
+lf54e_00:                               ; bank: $000 logical: $f54e
+          clc     
+          lda     $22e2, Y
+          and     #$07
+          sta     $243f, X
+          asl     A
+          asl     A
+          asl     A
+          asl     A
+          sta     $23df, X
+          lda     $22e2, Y
+          and     #$38
+          asl     A
+          sta     $239f, X
+          lsr     A
+          lsr     A
+          lsr     A
+          lsr     A
+          sta     $23ff, X
+          lda     $22e3, Y
+          lsr     A
+          lda     $22e2, Y
+          ror     A
+          and     #$e0
+          lsr     A
+          sta     $23bf, X
+          clc     
+          lsr     A
+          lsr     A
+          lsr     A
+          lsr     A
+          sta     $241f, X
+          stz     $247f, X
+          stz     $249f, X
+          stz     $245f, X
+          iny     
+          iny     
+          inx     
+          cpx     $2398
+          bne     lf54e_00
+          rts     
+lf596_00:                               ; bank: $000 logical: $f596
+          ora     #$80
+          sta     video_data_l
+          st2     #$f0
+          rts     
+lf59e_00:                               ; bank: $000 logical: $f59e
+          cly     
+lf59f_00:                               ; bank: $000 logical: $f59f
+          lda     [$00], Y
+          beq     lf5a9_00
+          jsr     lf596_00
+          iny     
+          bpl     lf59f_00
+lf5a9_00:                               ; bank: $000 logical: $f5a9
+          rts     
+lf5aa_00:                               ; bank: $000 logical: $f5aa
+          pha     
+          lsr     A
+          lsr     A
+          lsr     A
+          lsr     A
+          tay     
+          lda     $f5ea, Y
+          jsr     lf596_00
+          pla     
+lf5b7_00:                               ; bank: $000 logical: $f5b7
+          and     #$0f
+          tay     
+          lda     $f5ea, Y
+          jmp     lf596_00
+lf5c0_00:                               ; bank: $000 logical: $f5c0
+          cly     
+lf5c1_00:                               ; bank: $000 logical: $f5c1
+          cmp     #$64
+          bcc     lf5ca_00
+          iny     
+          sbc     #$64
+          bra     lf5c1_00
+lf5ca_00:                               ; bank: $000 logical: $f5ca
+          pha     
+          lda     $f5ea, Y
+          jsr     lf596_00
+          pla     
+          cly     
+lf5d3_00:                               ; bank: $000 logical: $f5d3
+          cmp     #$0a
+          bcc     lf5dc_00
+          iny     
+          sbc     #$0a
+          bra     lf5d3_00
+lf5dc_00:                               ; bank: $000 logical: $f5dc
+          pha     
+          lda     $f5ea, Y
+          jsr     lf596_00
+          ply     
+          lda     $f5ea, Y
+          jmp     lf596_00
+          bmi     lf61d_00
+          and     [$33]
+          bit     <$35, X
+          rol     <$37
+          sec     
+          and     $4241, Y
+          tma     #$02
+          eor     <$46
+lf5fa_00:                               ; bank: $000 logical: $f5fa
+          stz     <$00
+          lsr     A
+          ror     <$00
+          lsr     A
+          ror     <$00
+          sta     <$01
+          txa     
+          ora     <$00
+          sta     <$00
+          lda     #$00
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     <$00
+          sta     video_data_l
+          lda     <$01
+          sta     video_data_h
+          lda     #$02
+          sta     <vdc_reg
+          sta     video_reg_l
+          rts     
+lf622_00:                               ; bank: $000 logical: $f622
+          lda     [$00]
+          sta     <$06
+          ldy     #$01
+          lda     [$00], Y
+          sta     <$08
+          clc     
+          lda     <$00
+          adc     #$02
+          sta     <$00
+          lda     <$01
+          adc     #$00
+          sta     <$01
+lf639_00:                               ; bank: $000 logical: $f639
+          lda     #$00
+          sta     <vdc_reg
+          sta     video_reg_l
+          lda     <$02
+          sta     video_data_l
+          lda     <$03
+          sta     video_data_h
+          lda     #$02
+          sta     <vdc_reg
+          sta     video_reg_l
+          ldx     <$06
+          cly     
+lf654_00:                               ; bank: $000 logical: $f654
+          lda     [$00], Y
+          sta     video_data_l
+          iny     
+          lda     [$00], Y
+          sta     video_data_h
+          iny     
+          dex     
+          bne     lf654_00
+          dec     <$08
+          bne     lf668_00
+          rts     
+lf668_00:                               ; bank: $000 logical: $f668
+          clc     
+          tya     
+          adc     <$00
+          sta     <$00
+          cla     
+          adc     <$01
+          sta     <$01
+          clc     
+          lda     <$02
+          adc     #$40
+          sta     <$02
+          lda     <$03
+          adc     #$00
+          sta     <$03
+          jmp     lf639_00
+lf683_00:                               ; bank: $000 logical: $f683
+          cly     
+          lda     <$07
+          bpl     lf696_00
+          lda     <$06
+          eor     #$ff
+          sta     <$06
+          lda     <$07
+          eor     #$ff
+          sta     <$07
+          ldy     #$08
+lf696_00:                               ; bank: $000 logical: $f696
+          lda     <$09
+          bpl     lf6aa_00
+          lda     <$08
+          eor     #$ff
+          sta     <$08
+          lda     <$09
+          eor     #$ff
+          sta     <$09
+          tya     
+          ora     #$10
+          tay     
+lf6aa_00:                               ; bank: $000 logical: $f6aa
+          jmp     lf6f2_00
+lf6ad_00:                               ; bank: $000 logical: $f6ad
+          inc     <$07
+          inc     <$09
+          inc     <$01
+          inc     <$03
+          cly     
+          sec     
+          lda     <$06
+          sbc     <$00
+          sta     <$06
+          lda     <$07
+          sbc     <$01
+          sta     <$07
+          bcs     lf6d3_00
+          lda     <$06
+          eor     #$ff
+          sta     <$06
+          lda     <$07
+          eor     #$ff
+          sta     <$07
+          ldy     #$08
+lf6d3_00:                               ; bank: $000 logical: $f6d3
+          sec     
+          lda     <$08
+          sbc     <$02
+          sta     <$08
+          lda     <$09
+          sbc     <$03
+          sta     <$09
+          bcs     lf6f2_00
+          lda     <$08
+          eor     #$ff
+          sta     <$08
+          lda     <$09
+          eor     #$ff
+          sta     <$09
+          tya     
+          ora     #$10
+          tay     
+lf6f2_00:                               ; bank: $000 logical: $f6f2
+          lda     <$06
+          asl     A
+          sta     <$00
+          sta     $24c8
+          sta     $24ca
+          lda     <$07
+          rol     A
+          sta     <$01
+          sta     $24c9
+          sta     $24cb
+          clc     
+          lda     $24c8
+          adc     <$06
+          sta     $24c8
+          lda     $24c9
+          adc     <$07
+          sta     $24c9
+          clc     
+          lda     $24ca
+          adc     $24c8
+          sta     $24ca
+          lda     $24cb
+          adc     $24c9
+          sta     $24cb
+          lda     <$08
+          asl     A
+          sta     <$02
+          sta     $24cc
+          sta     $24ce
+          lda     <$09
+          rol     A
+          sta     <$03
+          sta     $24cd
+          sta     $24cf
+          clc     
+          lda     $24cc
+          adc     <$08
+          sta     $24cc
+          lda     $24cd
+          adc     <$09
+          sta     $24cd
+          clc     
+          lda     $24ce
+          adc     $24cc
+          sta     $24ce
+          lda     $24cf
+          adc     $24cd
+          sta     $24cf
+          sec     
+          lda     <$06
+          sbc     $24ce
+          lda     <$07
+          sbc     $24cf
+          bcs     lf79e_00
+          iny     
+          sec     
+          lda     <$00
+          sbc     $24cc
+          lda     <$01
+          sbc     $24cd
+          bcs     lf79e_00
+          iny     
+          sec     
+          lda     $24c8
+          sbc     <$02
+          lda     $24c9
+          sbc     <$03
+          bcs     lf79e_00
+          iny     
+          sec     
+          lda     $24ca
+          sbc     <$08
+          lda     $24cb
+          sbc     <$09
+          bcs     lf79e_00
+          iny     
+lf79e_00:                               ; bank: $000 logical: $f79e
+          lda     $f7a7, Y
+          tay     
+          eor     #$ff
+          and     #$0f
+          rts     
+          tsb     <$05
+          asl     <$07
+          php     
+          brk     
+          brk     
+          brk     
+          tsb     $0a0b
+          ora     #$08
+          brk     
+          brk     
+          brk     
+          tsb     <$03
+          sxy     
+          ora     [$00, X]
+          brk     
+          brk     
+          brk     
+          tsb     $0e0d
+          bbr0    <$00, lf7c5_00
+lf7c5_00:                               ; bank: $000 logical: $f7c5
+          brk     
+          brk     
+lf7c7_00:                               ; bank: $000 logical: $f7c7
+          sec     
+          lda     <$06
+          sbc     <$00
+          sta     <$06
+          lda     <$07
+          sbc     <$01
+          sta     <$07
+          sta     <$04
+          bpl     lf7e3_00
+          cla     
+          sec     
+          sbc     <$06
+          sta     <$06
+          cla     
+          sbc     <$07
+          sta     <$07
+lf7e3_00:                               ; bank: $000 logical: $f7e3
+          sec     
+          lda     <$08
+          sbc     <$02
+          sta     <$08
+          lda     <$09
+          sbc     <$03
+          sta     <$09
+          sta     <$05
+          bpl     lf7ff_00
+          cla     
+          sec     
+          sbc     <$08
+          sta     <$08
+          cla     
+          sbc     <$09
+          sta     <$09
+lf7ff_00:                               ; bank: $000 logical: $f7ff
+          sec     
+          lda     <$06
+          sbc     <$08
+          lda     <$07
+          sbc     <$09
+          bcs     lf81f_00
+lf80a_00:                               ; bank: $000 logical: $f80a
+          sec     
+          lda     <$08
+          sbc     #$08
+          lda     <$09
+          sbc     #$00
+          bcc     lf834_00
+          lsr     <$07
+          ror     <$06
+          lsr     <$09
+          ror     <$08
+          bra     lf80a_00
+lf81f_00:                               ; bank: $000 logical: $f81f
+          sec     
+          lda     <$06
+          sbc     #$08
+          lda     <$07
+          sbc     #$00
+          bcc     lf834_00
+          lsr     <$07
+          ror     <$06
+          lsr     <$09
+          ror     <$08
+          bra     lf81f_00
+lf834_00:                               ; bank: $000 logical: $f834
+          lda     <$08
+          asl     A
+          asl     A
+          asl     A
+          ora     <$06
+          tay     
+          lda     $f864, Y
+          sta     <$00
+          lda     <$04
+          bmi     lf857_00
+          lda     <$05
+          bmi     lf84f_00
+          lda     #$20
+          clc     
+          adc     <$00
+          rts     
+lf84f_00:                               ; bank: $000 logical: $f84f
+          lda     #$40
+          sec     
+          sbc     <$00
+          and     #$3f
+          rts     
+lf857_00:                               ; bank: $000 logical: $f857
+          lda     <$05
+          bmi     lf861_00
+          lda     #$20
+          sec     
+          sbc     <$00
+          rts     
+lf861_00:                               ; bank: $000 logical: $f861
+          lda     <$00
+          rts     
+          
+gx_unknown_data_00:                     ; bank: $000 logical: $f864
+          .db $10,$10,$10,$10,$10,$10,$10,$10
+          .db $00,$08,$0b,$0c,$0d,$0d,$0e,$0e
+          .db $00,$04,$08,$0a,$0b,$0c,$0c,$0d
+          .db $00,$03,$05,$08,$09,$0a,$0b,$0b
+          .db $00,$02,$04,$06,$08,$09,$0a,$0a
+          .db $00,$02,$04,$05,$07,$08,$09,$0a
+          .db $00,$02,$03,$05,$06,$07,$08,$09
+          .db $00,$01,$03,$04,$05,$06,$07,$08
 
-	.code
-	.bank $000
-	.org $f8a4
 ;-------------------------------------------------------------------------------
 ; Main routine
 ;-------------------------------------------------------------------------------
@@ -2598,16 +3483,16 @@ lf99a_00:                               ; bank: $000 logical: $f99a
           and     #$e7
           sta     vdc_control+1
           sta     video_data_h
-          lda     #$00                          ; VRAM write pointer
+          lda     #$00                  ; VRAM write pointer
           sta     vdc_reg
           sta     video_reg_l
-          st1     #$00                          ; set to past the BAT
+          st1     #$00                  ; set to past the BAT
           st2     #$08
-          lda     #$02                          ; VRAM data register
+          lda     #$02                  ; VRAM data register
           sta     vdc_reg
           sta     video_reg_l
           ldx     #$80                          
-          ldx     #$00                          ; clear 256 tiles
+          ldx     #$00                  ; clear 256 tiles
 @loop:                                  ; bank: $000 logical: $f9d1
           st1     #$00
           st2     #$00
@@ -2620,10 +3505,661 @@ lf99a_00:                               ; bank: $000 logical: $f99a
           dex     
           bne     @loop
           rts     
+lf9e5_00:                               ; bank: $000 logical: $f9e5
+          stz     <$06
+          stz     <$07
+          stz     <$08
+          stz     <$09
+lf9ed_00:                               ; bank: $000 logical: $f9ed
+          cmp     #$10
+          bcc     lf9f5_00
+          lsr     A
+          jmp     lf9ed_00
+lf9f5_00:                               ; bank: $000 logical: $f9f5
+          tax     
+          lda     $2791, X
+          bpl     lfa14_00
+          lda     $2790
+          cmp     #$40
+          bcs     lfa61_00
+          sta     $27a1, X
+          sta     $2791, X
+          tay     
+          lda     #$ff
+          sta     $2750, Y
+          sta     $2710, Y
+          jmp     lfa2b_00
+lfa14_00:                               ; bank: $000 logical: $fa14
+          tay     
+          lda     $2790
+          cmp     #$40
+          bcs     lfa61_00
+          sta     $2710, Y
+          sta     $2791, X
+          say     
+          sta     $2750, Y
+          lda     #$ff
+          sta     $2710, Y
+lfa2b_00:                               ; bank: $000 logical: $fa2b
+          lda     <$08
+          sec     
+          sbc     $24bf
+          sta     $24d0, Y
+          lda     <$09
+          sbc     #$00
+          sta     $2510, Y
+          lda     <$06
+          sta     $2550, Y
+          lda     <$07
+          sta     $2590, Y
+          lda     <$46
+          sta     $25d0, Y
+          lda     <$47
+          sta     $2610, Y
+          lda     <$48
+          sta     $2650, Y
+          lda     <$00
+          sta     $2690, Y
+          lda     <$01
+          sta     $26d0, Y
+          inc     $2790
+lfa61_00:                               ; bank: $000 logical: $fa61
+          rts     
+lfa62_00:                               ; bank: $000 logical: $fa62
+          stz     $2790
+          ldx     #$0f
+          lda     #$00
+          sta     vdc_reg
+          sta     video_reg_l
+          inc     <$4a
+          lda     <$4a
+          lsr     A
+          lda     #$08
+          adc     #$00
+          st1     #$00
+          sta     video_data_h
+          lda     <$49
+          lsr     A
+          bcc     lfab5_00
+          lda     #$02
+          sta     vdc_reg
+          sta     video_reg_l
+lfa8a_00:                               ; bank: $000 logical: $fa8a
+          ldy     $2791, X
+          bmi     lfaa0_00
+          ldy     $27a1, X
+lfa92_00:                               ; bank: $000 logical: $fa92
+          phx     
+          jsr     lfaf3_00
+          plx     
+          lda     $2710, Y
+          tay     
+          bpl     lfa92_00
+          sta     $2791, X
+lfaa0_00:                               ; bank: $000 logical: $faa0
+          dex     
+          bpl     lfa8a_00
+          lda     <$4a
+          and     #$01
+          tax     
+          lda     <$4b
+          tay     
+          sec     
+          sbc     <$4c, X
+          sty     <$4c, X
+          stz     <$4b
+          bcc     lfae5_00
+          rts     
+lfab5_00:                               ; bank: $000 logical: $fab5
+          lda     #$02
+          sta     vdc_reg
+          sta     video_reg_l
+lfabd_00:                               ; bank: $000 logical: $fabd
+          ldy     $2791, X
+          bmi     lfad0_00
+lfac2_00:                               ; bank: $000 logical: $fac2
+          phx     
+          jsr     lfaf3_00
+          plx     
+          lda     $2750, Y
+          tay     
+          bpl     lfac2_00
+          sta     $2791, X
+lfad0_00:                               ; bank: $000 logical: $fad0
+          dex     
+          bpl     lfabd_00
+          lda     <$4a
+          and     #$01
+          tax     
+          lda     <$4b
+          tay     
+          sec     
+          sbc     <$4c, X
+          sty     <$4c, X
+          stz     <$4b
+          bcc     lfae5_00
+          rts     
+lfae5_00:                               ; bank: $000 logical: $fae5
+          asl     A
+          tay     
+lfae7_00:                               ; bank: $000 logical: $fae7
+          st1     #$00
+          st2     #$00
+          st1     #$00
+          st2     #$00
+          dey     
+          bne     lfae7_00
+          rts     
+lfaf3_00:                               ; bank: $000 logical: $faf3
+          sxy     
+          lda     $2690, X
+          sta     <$00
+          lda     $26d0, X
+          sta     <$01
+          ldy     #$01
+          lda     [$00]
+          beq     lfb59_00
+          sta     <$06
+lfb06_00:                               ; bank: $000 logical: $fb06
+          lda     <$4b
+          cmp     #$40
+          bcs     lfb5a_00
+          inc     <$4b
+          lda     [$00], Y
+          iny     
+          adc     $24d0, X
+          sta     video_data_l
+          lda     [$00], Y
+          iny     
+          adc     $2510, X
+          sta     video_data_h
+          lda     [$00], Y
+          iny     
+          clc     
+          adc     $2550, X
+          sta     video_data_l
+          lda     [$00], Y
+          iny     
+          adc     $2590, X
+          sta     video_data_h
+          lda     [$00], Y
+          iny     
+          adc     $25d0, X
+          sta     video_data_l
+          lda     [$00], Y
+          iny     
+          adc     $2610, X
+          sta     video_data_h
+          lda     [$00], Y
+          iny     
+          clc     
+          adc     $2650, X
+          sta     video_data_l
+          lda     [$00], Y
+          iny     
+          sta     video_data_h
+          dec     <$06
+          bne     lfb06_00
+lfb59_00:                               ; bank: $000 logical: $fb59
+          clc     
+lfb5a_00:                               ; bank: $000 logical: $fb5a
+          sxy     
+          rts     
+lfb5c_00:                               ; bank: $000 logical: $fb5c
+          lda     <$50
+          sta     $27b5
+          lda     <$51
+          sta     $27b6
+lfb66_00:                               ; bank: $000 logical: $fb66
+          lda     #$ff
+          jsr     lfbf5_00
+          bsr     lfbb7_00
+          beq     lfb86_00
+          cmp     $27b6
+          bne     lfb7b_00
+          lda     <$4e
+          cmp     $27b5
+          beq     lfb86_00
+lfb7b_00:                               ; bank: $000 logical: $fb7b
+          lda     <$4e
+          sta     <$50
+          lda     <$4f
+          sta     <$51
+          jmp     lfb66_00
+lfb86_00:                               ; bank: $000 logical: $fb86
+          lda     $27b5
+          sta     <$50
+          lda     $27b6
+          sta     <$51
+lfb90_00:                               ; bank: $000 logical: $fb90
+          jsr     lfbc3_00
+          bit     #$08
+          bne     lfbaf_00
+          bit     #$10
+          beq     lfba1_00
+          bsr     lfbb3_00
+          beq     lfb90_00
+          bra     lfba5_00
+lfba1_00:                               ; bank: $000 logical: $fba1
+          bsr     lfbb7_00
+          beq     lfb90_00
+lfba5_00:                               ; bank: $000 logical: $fba5
+          lda     <$4e
+          sta     <$50
+          lda     <$4f
+          sta     <$51
+          bra     lfb90_00
+lfbaf_00:                               ; bank: $000 logical: $fbaf
+          lda     $27b7
+          rts     
+lfbb3_00:                               ; bank: $000 logical: $fbb3
+          ldy     #$07
+          bra     lfbb9_00
+lfbb7_00:                               ; bank: $000 logical: $fbb7
+          ldy     #$09
+lfbb9_00:                               ; bank: $000 logical: $fbb9
+          lda     [$50], Y
+          sta     <$4e
+          iny     
+          lda     [$50], Y
+          sta     <$4f
+          rts     
+lfbc3_00:                               ; bank: $000 logical: $fbc3
+          lda     $2033
+          and     #$10
+          jsr     lfbf5_00
+          lda     #$01
+          jsr     gx_unknown_e9e4
+          lda     [$4e]
+          tay     
+          lda     $22d8
+          bit     #$58
+          bne     lfbea_00
+          bit     #$24
+          beq     lfbdf_00
+          iny     
+lfbdf_00:                               ; bank: $000 logical: $fbdf
+          bit     #$80
+          beq     lfbe4_00
+          dey     
+lfbe4_00:                               ; bank: $000 logical: $fbe4
+          tya     
+          sta     [$4e]
+          jmp     lfbc3_00
+lfbea_00:                               ; bank: $000 logical: $fbea
+          pha     
+          lda     #$ff
+          jsr     lfbf5_00
+          ldy     $27b7
+          pla     
+          rts     
+lfbf5_00:                               ; bank: $000 logical: $fbf5
+          pha     
+          ldy     #$05
+          lda     [$50], Y
+          sta     <$4e
+          iny     
+          lda     [$50], Y
+          sta     <$4f
+          ldy     #$0d
+          lda     [$50], Y
+          sta     $27b7
+          ldy     #$03
+          lda     [$50], Y
+          sta     $27b3
+          iny     
+          lda     [$50], Y
+          sta     $27b4
+          lda     [$4e]
+          bmi     lfc28_00
+          cmp     $27b3
+          bcc     lfc28_00
+          cmp     $27b4
+          bcc     lfc2c_00
+          lda     $27b3
+          bra     lfc2c_00
+lfc28_00:                               ; bank: $000 logical: $fc28
+          lda     $27b4
+          dec     A
+lfc2c_00:                               ; bank: $000 logical: $fc2c
+          sta     [$4e]
+          ldy     #$01
+          lda     [$50]
+          tax     
+          lda     [$50], Y
+          jsr     lf5fa_00
+          lda     <$50
+          sta     <$00
+          lda     <$51
+          sta     <$01
+          clc     
+          lda     <$00
+          adc     #$0e
+          sta     <$00
+          lda     <$01
+          adc     #$00
+          sta     <$01
+          pla     
+          beq     lfc55_00
+          jsr     lf59e_00
+          bra     lfc58_00
+lfc55_00:                               ; bank: $000 logical: $fc55
+          jsr     lfcbe_00
+lfc58_00:                               ; bank: $000 logical: $fc58
+          ldy     #$05
+          lda     [$50], Y
+          sta     <$4e
+          iny     
+          lda     [$50], Y
+          sta     <$4f
+          ldy     #$02
+          lda     [$50], Y
+          beq     lfc84_00
+          ldy     #$0b
+          lda     [$50], Y
+          sta     <$04
+          iny     
+          lda     [$50], Y
+          sta     <$05
+          lda     [$4e]
+          asl     A
+          tay     
+          lda     [$04], Y
+          sta     <$00
+          iny     
+          lda     [$04], Y
+          sta     <$01
+          jmp     lf59e_00
+lfc84_00:                               ; bank: $000 logical: $fc84
+          lda     #$20
+          sta     $27b1
+          lda     [$4e]
+          ldx     #$64
+          stx     $27b2
+          jsr     lfc9f_00
+          ldx     #$0a
+          stx     $27b2
+          jsr     lfc9f_00
+          jsr     lfcb0_00
+          rts     
+lfc9f_00:                               ; bank: $000 logical: $fc9f
+          clx     
+lfca0_00:                               ; bank: $000 logical: $fca0
+          sec     
+          sbc     $27b2
+          bcc     lfca9_00
+          inx     
+          bra     lfca0_00
+lfca9_00:                               ; bank: $000 logical: $fca9
+          adc     $27b2
+          sax     
+          tay     
+          beq     lfcb5_00
+lfcb0_00:                               ; bank: $000 logical: $fcb0
+          ldy     #$30
+          sty     $27b1
+lfcb5_00:                               ; bank: $000 logical: $fcb5
+          clc     
+          adc     $27b1
+          jsr     lf596_00
+          sax     
+          rts     
+lfcbe_00:                               ; bank: $000 logical: $fcbe
+          cly     
+lfcbf_00:                               ; bank: $000 logical: $fcbf
+          lda     [$00], Y
+          bne     lfcc4_00
+          rts     
+lfcc4_00:                               ; bank: $000 logical: $fcc4
+          lda     #$20
+          jsr     lf596_00
+          iny     
+lfcca_00:                               ; bank: $000 logical: $fcca
+          bra     lfcbf_00
 
-	.code
-	.bank $000
-	.org $fe3c
+gx_yes_no_tbl:                          ; bank: $000 logical: $fccc
+          .dw gx_msg_no
+          .dw gx_msg_yes
+
+gx_msg_no:                              ; bank: $000 logical: $fcd0
+          db " NO",$00
+gx_msg_yes:                             ; bank: $000 logical: $fcd4 
+          db "YES",$00 
+
+gx_on_off_tbl:                          ; bank: $000 logical: $fcd8
+          .dw $fce0
+          .dw $fcdc
+
+gx_msg_on:                              ; bank: $000 logical: $fcdc
+          db " ON",$00
+gx_msg_off:                             ; bank: $000 logical: $fce0
+          db "OFF",$00 
+
+gx_unknown_fce4:                        ; bank: $000 logical: $fce4
+          lda     <$55
+lfce6_00:                               ; bank: $000 logical: $fce6
+          cmp     #$60
+          bcc     lfcf1_00
+          sbc     #$20
+          inc     $27ba
+          bra     lfce6_00
+lfcf1_00:                               ; bank: $000 logical: $fcf1
+          sta     <$55
+          tma     #$02
+          sta     $27bb
+          tma     #$03
+          sta     $27bc
+          lda     $27ba
+          tam     #$02
+          inc     A
+          tam     #$03
+          lda     [$54]
+          sta     $27b8
+          inc     <$54
+          bne     lfd10_00
+          inc     <$55
+lfd10_00:                               ; bank: $000 logical: $fd10
+          clx     
+lfd11_00:                               ; bank: $000 logical: $fd11
+          lda     <$55
+          cmp     #$60
+          bcc     lfd22_00
+          sbc     #$20
+          sta     <$55
+          tma     #$03
+          tam     #$02
+          inc     A
+          tam     #$03
+lfd22_00:                               ; bank: $000 logical: $fd22
+          lda     [$54]
+          cmp     #$ff
+          beq     lfd33_00
+          bit     #$80
+          beq     lfd49_00
+          bit     #$40
+          beq     lfd76_00
+          jmp     lfddb_00
+lfd33_00:                               ; bank: $000 logical: $fd33
+          inc     <$54
+          bne     lfd39_00
+          inc     <$55
+lfd39_00:                               ; bank: $000 logical: $fd39
+          dec     $27b8
+          bne     lfd11_00
+          lda     $27bb
+          tam     #$02
+          lda     $27bc
+          tam     #$03
+          rts     
+lfd49_00:                               ; bank: $000 logical: $fd49
+          bit     #$40
+          bne     lfd9e_00
+          and     #$3f
+          tax     
+          inc     <$54
+          bne     lfd56_00
+          inc     <$55
+lfd56_00:                               ; bank: $000 logical: $fd56
+          cly     
+lfd57_00:                               ; bank: $000 logical: $fd57
+          lda     [$54], Y
+          sta     [$52], Y
+          iny     
+          dex     
+          bne     lfd57_00
+          clc     
+          tya     
+          adc     <$54
+          sta     <$54
+          bcc     lfd69_00
+          inc     <$55
+lfd69_00:                               ; bank: $000 logical: $fd69
+          clc     
+          tya     
+          adc     <$52
+          sta     <$52
+          bcc     lfd73_00
+          inc     <$53
+lfd73_00:                               ; bank: $000 logical: $fd73
+          jmp     lfd11_00
+lfd76_00:                               ; bank: $000 logical: $fd76
+          and     #$3f
+          tax     
+          ldy     #$01
+          lda     [$54], Y
+          cly     
+lfd7e_00:                               ; bank: $000 logical: $fd7e
+          sta     [$52], Y
+          iny     
+          dex     
+          bne     lfd7e_00
+          clc     
+          lda     <$54
+          adc     #$02
+          sta     <$54
+          lda     <$55
+          adc     #$00
+          sta     <$55
+          clc     
+          tya     
+          adc     <$52
+          sta     <$52
+          bcc     lfd9b_00
+          inc     <$53
+lfd9b_00:                               ; bank: $000 logical: $fd9b
+          jmp     lfd11_00
+lfd9e_00:                               ; bank: $000 logical: $fd9e
+          and     #$3f
+          tax     
+          ldy     #$01
+          lda     [$54], Y
+          sta     <$56
+          iny     
+          lda     [$54], Y
+          sta     <$57
+          clc     
+          lda     <$54
+          adc     #$03
+          sta     <$54
+          lda     <$55
+          adc     #$00
+          sta     <$55
+          cly     
+lfdba_00:                               ; bank: $000 logical: $fdba
+          lda     <$56
+          sta     [$52], Y
+          iny     
+          lda     <$57
+          sta     [$52], Y
+          iny     
+          inc     <$56
+          bne     lfdca_00
+          inc     <$57
+lfdca_00:                               ; bank: $000 logical: $fdca
+          dex     
+          bne     lfdba_00
+          clc     
+          clc     
+          tya     
+          adc     <$52
+          sta     <$52
+          bcc     lfdd8_00
+          inc     <$53
+lfdd8_00:                               ; bank: $000 logical: $fdd8
+          jmp     lfd11_00
+lfddb_00:                               ; bank: $000 logical: $fddb
+          and     #$3f
+          tax     
+          ldy     #$01
+          lda     [$54], Y
+          sta     <$56
+          iny     
+          lda     [$54], Y
+          sta     <$57
+          clc     
+          lda     <$54
+          adc     #$03
+          sta     <$54
+          lda     <$55
+          adc     #$00
+          sta     <$55
+          cly     
+lfdf7_00:                               ; bank: $000 logical: $fdf7
+          lda     <$56
+          sta     [$52], Y
+          iny     
+          lda     <$57
+          sta     [$52], Y
+          iny     
+          dex     
+          bne     lfdf7_00
+          clc     
+          tya     
+          adc     <$52
+          sta     <$52
+          bcc     lfe0e_00
+          inc     <$53
+lfe0e_00:                               ; bank: $000 logical: $fe0e
+          jmp     lfd11_00
+
+;-------------------------------------------------------------------------------
+; byte size to sector count
+; input: 
+;    $200a-$200d contains a 32 bits value.
+; output: 
+;    $200b sector count MSB
+;    $200a sector count LSB
+;        A sector count LSB
+;-------------------------------------------------------------------------------
+lfe11_00:                               ; bank: $000 logical: $fe11
+          clc     
+          lda     <$0a                  ; add 2047 to the 32 bit value
+          adc     #$ff
+          sta     <$0a
+          lda     <$0b
+          adc     #$07
+          sta     <$0b
+          bcc     lfe26_00
+          inc     <$0c
+          bne     lfe26_00
+          inc     <$0d
+lfe26_00: 
+          ldx     #$04                  ; multiply by 32
+lfe28_00:
+          asl     <$0a
+          rol     <$0b
+          rol     <$0c
+          rol     <$0d
+          dex     
+          bpl     lfe28_00
+          lda     <$0d                  ; as 2048*32 = 65536, getting the 2 upper bytes will give us the sector count
+          sta     <$0b
+          lda     <$0c
+          sta     <$0a
+          rts     
+
+; return:
+;  A - $ff = error
 gx_unknown_fe3c:                        ; bank: $000 logical: $fe3c
           lda     #$80
           sta     $2021
@@ -2634,29 +4170,29 @@ gx_unknown_fe3c:                        ; bank: $000 logical: $fe3c
           tam     #$04
           inc     A
           tam     #$05
-          stz     $2026
-          stz     $2027
+          stz     $2026                 ; sector mid ?
+          stz     $2027                 ; sector hi ?
           lda     #$10
-          sta     $2025
+          sta     $2025                 ; sector lo ?
           lda     #$01
-          sta     $2023
-          jsr     gx_unknown_e33a
+          sta     $2023                 ; sector count ?
+          jsr     gx_unknown_e33a       ; read sector routine ?
           ldx     #$04
 lfe61_00:                               ; bank: $000 logical: $fe61
-          lda     $ff2a, X
+          lda     gx_iso9660_id, X      ; check for primary volume descriptor identifier
           cmp     $4001, X
           beq     lfe6c_00
           jmp     lff27_00
 lfe6c_00:                               ; bank: $000 logical: $fe6c
           dex     
           bpl     lfe61_00
-          tii     $409e, $2025, $0003
-          tii     $40a6, $200a, $0004
-          jsr     lfe11_00
-          sta     $2023
+          tii     $409e, $2025, $0003   ; location of the extent (LBA) (little endian).
+          tii     $40a6, $200a, $0004   ; data length (size of the extent) (little endian)
+          jsr     lfe11_00              ; byte size to sector count?
+          sta     $2023 
           lda     #$80
           sta     $2021
-          jsr     gx_unknown_e33a
+          jsr     gx_unknown_e33a       ; read root dir extent
           lda     #$00
           sta     <$00
           lda     #$40
@@ -2752,16 +4288,63 @@ lff1a_00:                               ; bank: $000 logical: $ff1a
           sta     $2266
           lda     #$00
           rts     
+lff27_00:                               ; bank: $000 logical: $ff27
+          lda     #$ff
+          rts    
 
-	.code
-	.bank $000
-	.org $ff75
+gx_iso9660_id:                          ; bank: $000 logical: $ff2a
+          db "CD001"
+
+gx_unknown_ff2f:                        ; bank: $000 logical: $ff2f
+          lda     #$bd
+          sta     <$02
+          lda     #$27
+          sta     <$03
+lff37_00:                               ; bank: $000 logical: $ff37
+          lda     [$02]
+          bmi     lff58_00
+          cly     
+lff3c_00:                               ; bank: $000 logical: $ff3c
+          lda     [$00], Y
+          cmp     [$02], Y
+          bne     lff49_00
+          iny     
+          cpy     #$04
+          beq     lff5b_00
+          bra     lff3c_00
+lff49_00:                               ; bank: $000 logical: $ff49
+          clc     
+          lda     <$02
+          adc     #$08
+          sta     <$02
+          lda     <$03
+          adc     #$00
+          sta     <$03
+          bra     lff37_00
+lff58_00:                               ; bank: $000 logical: $ff58
+          lda     #$ff
+          rts     
+lff5b_00:                               ; bank: $000 logical: $ff5b
+          lda     [$02], Y
+          sta     $2025
+          iny     
+          lda     [$02], Y
+          sta     $2026
+          iny     
+          lda     [$02], Y
+          sta     $2027
+          iny     
+          lda     [$02], Y
+          sta     $2023
+          lda     #$00
+          rts     
 gx_unknown_ff75:                        ; bank: $000 logical: $ff75
-          jsr     lff2f_00
+          jsr     gx_unknown_ff2f
           bmi     lff7d_00
           jsr     gx_unknown_e33a
 lff7d_00:                               ; bank: $000 logical: $ff7d
           rts     
+   
 
 	.data
 	.bank $000
