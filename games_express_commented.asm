@@ -588,9 +588,10 @@ gx_adpcm_read_to_ram:                   ; bank: $000 logical: $e40f
           sta     $222f
           rts     
 
+;-------------------------------------------------------------------------------
 ; Same as gx_adpcm_read_to_ram but the read bytes are transfered to the VDC.
 ; Note that the VDC write register must have been set beforehand.
-;
+;-------------------------------------------------------------------------------
 gx_adpcm_read_to_vdc:                   ; bank: $000 logical: $e454
           jsr     gx_negate
 @start:
@@ -1005,7 +1006,7 @@ gx_adpcm_reset:                         ; bank: $000 logical: $e794
           stz     adpcm_addr_ctrl
           stz     adpcm_dma_ctrl
           lda     #$6f
-          trb     cd_control                ; clear all bits except bits 4 and 7
+          trb     cd_control            ; clear all bits except bits 4 and 7
           stz     adpcm_playback_rate
           rts     
 gx_unknown_e7a8:                        ; bank: $000 logical: $e7a8
@@ -1102,18 +1103,18 @@ le85c_00:                               ; bank: $000 logical: $e85c
 gx_irq_2_unknown:                       ; bank: $000 logical: $e865
           lda     cd_control
           and     bram_lock 
-          ora     <$19                      ; 2019 contains a copy of cd_control
+          ora     <$19                  ; 2019 contains a copy of cd_control
           sta     <$19
           bbr2    <$19, le87c_00
-          lda     #$04                      ; bit 2 is set : adpcm sample playback in progress / half end
-          trb     cd_control                ; reset bit 3 of cd_control
+          lda     #$04                  ; bit 2 is set : adpcm sample playback in progress / half end
+          trb     cd_control            ; reset bit 3 of cd_control
           lda     #$04
           trb     <$19
           cli     
 le87c_00:                               ; bank: $000 logical: $e87c
           bbr5    <$19, le8d9_00
-          lda     #$20                      ; bit 5 is set: data transfer done?
-          trb     cd_control                ; clear bit 5
+          lda     #$20                  ; bit 5 is set: data transfer done?
+          trb     cd_control            ; clear bit 5
           lda     #$20
           trb     <$19
           cli     
@@ -1156,7 +1157,7 @@ le8c6_00:                               ; bank: $000 logical: $e8c6
           tsb     cd_control
 le8d9_00:                               ; bank: $000 logical: $e8d9
           bbr4    <$19, le8f1_00
-          lda     #$10                              ; subchannel fifo something ?
+          lda     #$10                  ; subchannel fifo something ?
           trb     cd_control
           lda     #$10
           trb     <$19
@@ -1166,7 +1167,7 @@ le8d9_00:                               ; bank: $000 logical: $e8d9
           lda     #$10
           tsb     cd_control
 le8f1_00:                               ; bank: $000 logical: $e8f1
-          bbr3    <$19, le902_00                    ; adpcm end reached
+          bbr3    <$19, le902_00        ; adpcm end reached
           lda     #$0c
           trb     cd_control
           lda     #$08
@@ -1780,13 +1781,13 @@ led11_00:                               ; bank: $000 logical: $ed11
 ;-------------------------------------------------------------------------------
 gx_vdc_load_vram:                       ; bank: $000 logical: $ed15
           lda     <$3b
-led17_00:                               ; bank: $000 logical: $ed17
+@l0:                                    ; bank: $000 logical: $ed17
           cmp     #$60                  ; remap source pointer
-          bcc     led22_00              ;     while ptr.hi >= 0x60
+          bcc     @l1                   ;     while ptr.hi >= 0x60
           sbc     #$20                  ;         ptr.hi -= 0x20
           inc     $22c7                 ;         bank++
-          bra     led17_00
-led22_00:                               ; bank: $000 logical: $ed22
+          bra     @l0
+@l1:                                    ; bank: $000 logical: $ed22
           sta     <$3b
           stz     $22c0
           lda     #$05                  ; disable sprite and background display
@@ -1806,7 +1807,7 @@ led22_00:                               ; bank: $000 logical: $ed22
           lda     #$02                  ; write to VRAM data register
           sta     <vdc_reg
           sta     video_reg_l
-          lda     $22c1                 ; $22c8.w = $22c2.w << 1
+          lda     $22c1                 ; $22c3.w = $22c2.w << 1
           asl     A                     ; Why?
           sta     $22c3
           lda     $22c2
@@ -1822,12 +1823,13 @@ led22_00:                               ; bank: $000 logical: $ed22
           tam     #$03
           lda     [$3a]                 ; 1st byte : bloc count ?
           sta     $22c6
-          inc     <$3a
-          bne     led7c_00
+          inc     <$3a                  ; $203a.w += 1
+          bne     @l2
           inc     <$3b
-led7c_00:                               ; bank: $000 logical: $ed7c
+@l2:                                    ; bank: $000 logical: $ed7c
           clx     
           bra     ledcb_00
+
           lda     $22c6
           bne     led85_00
           rts     
@@ -1861,6 +1863,7 @@ led85_00:                               ; bank: $000 logical: $ed85
           beq     ledcb_00
           lda     <$3f
           sta     video_data_l
+          
 ledcb_00:                               ; bank: $000 logical: $edcb
           lda     <$3b                  ; remap pointer 
           cmp     #$60
@@ -4359,9 +4362,9 @@ irq_vectors:                            ; bank: $000 logical: $fff6
 	.code
 	.bank $001
 	.org $c000
-gx_load_gfx_data:                       ; bank: $001 logical: $c000
+gx_load_gfx_data:                                       ; bank: $001 logical: $c000
           jsr     gx_vdc_disable_display
-          stz     <gx_scroll_x
+          stz     <gx_scroll_x                          ; reset scrolling coordinates
           stz     <gx_scroll_x+1
           stz     <gx_scroll_y
           stz     <gx_scroll_y+1

@@ -234,7 +234,7 @@
         "data": { "type": "binary", "element_size": 2, "elements_per_line": 16 }
     },
     "gx_bat_00": {
-        "filename": "gfx_bat_00.bin",
+        "filename": "gx_bat_00.bin",
         "type": "data",
         "page": 1,
         "logical": "c55f",
@@ -242,13 +242,13 @@
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
         "data": { "type": "binary", "element_size": 2, "elements_per_line": 16 }
     },
-    "gx_til_00": {
-        "filename": "gfx_bat_00.bin",
+    "gx_dat_00": {
+        "filename": "gx_dat_00.bin",
         "type": "data",
         "page": 1,
         "logical": "4d5f",
-        "size": "800",
+        "size": "4b7d",
         "mpr": ["ff", "f8", 1, 2, 0, 0, 1, 0 ],
-        "data": { "type": "binary", "element_size": 2, "elements_per_line": 16 }
+        "data": { "type": "binary" }
     }
 }
