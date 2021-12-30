@@ -50,7 +50,7 @@ gx_unknown_e000:
 ; $E045:
           jmp     gx_write_cd_fade_timer
 ; $E048:
-          jmp     gx_unknown_e28b
+          jmp     gx_scsi_cmd
 ; $E04B:
           jmp     gx_unknown_e33a
 ; $E04E:
@@ -68,7 +68,7 @@ gx_unknown_e000:
 ; $E060:
           jmp     gx_unknown_e5cd
 ; $E063:
-          jmp     gx_unknown_e28b
+          jmp     gx_scsi_cmd
 ; $E066:
           jmp     gx_irq_reset
 ; $E069:
@@ -223,7 +223,7 @@ le1a7_00:                               ; bank: $000 logical: $e1a7
           sta     $2211
           lda     <$23
           sta     $2212
-          jsr     gx_unknown_e28b
+          jsr     gx_scsi_cmd
           cmp     #$c8
           bne     le1e6_00
           lda     #$04
@@ -239,25 +239,31 @@ le1a7_00:                               ; bank: $000 logical: $e1a7
           tii     $2207, $2020, $0008
           jmp     le1a7_00
 le1e6_00:                               ; bank: $000 logical: $e1e6
-          rts     
+          rts 
+;-------------------------------------------------------------------------------
+; Read data from CD
+; Warning this routine doesn't not remap the destination pointer.
+; $2021, $2022 : address of the destination buffer
+; $2023, $2024 : number of bytes to read
+;-------------------------------------------------------------------------------    
 gx_unknown_e1e7:                        ; bank: $000 logical: $e1e7
-          lda     cd_status
+          lda     cd_port
           and     #$f8
           sta     $222f
           cmp     #$d8
-          beq     le21a_00
+          beq     @resp
           cmp     #$c8
-          beq     le1fa_00
+          beq     @read
           jmp     gx_unknown_e1e7
-le1fa_00:                               ; bank: $000 logical: $e1fa
+@read:
           cly     
           lda     cd_command
           sta     [$21], Y
-          jsr     gx_unknown_e279
+          jsr     gx_scsi_handshake
           inc     <$21
-          bne     le209_00
+          bne     @l0
           inc     <$22
-le209_00:                               ; bank: $000 logical: $e209
+@l0:
           sec     
           lda     <$23
           sbc     #$01
@@ -267,15 +273,14 @@ le209_00:                               ; bank: $000 logical: $e209
           sta     <$24
           ora     <$23
           bne     gx_unknown_e1e7
-le21a_00:                               ; bank: $000 logical: $e21a
-          lda     cd_status
+@resp:
+          lda     cd_port
           and     #$f8
           sta     $222f
           and     #$b8
           cmp     #$88
-          jsr     le4ea_00
+          jsr     gx_scsi_resp
           rts     
-
 ;-------------------------------------------------------------------------------
 ; Reset CDROM
 ;-------------------------------------------------------------------------------
@@ -292,11 +297,12 @@ gx_cd_reset:                            ; bank: $000 logical: $e22a
 @loop:
           dex     
           bne     @loop
-          rts     
+          rts   
+  
 gx_unknown_e245:                        ; bank: $000 logical: $e245
           jsr     gx_unknown_e25c
           stz     $2210
-          jsr     gx_unknown_e28b
+          jsr     gx_scsi_cmd
           jsr     gx_unknown_e4cd
           cmp     #$00
           beq     le25a_00
@@ -306,11 +312,11 @@ gx_unknown_e245:                        ; bank: $000 logical: $e245
 le25a_00:                               ; bank: $000 logical: $e25a
           clc     
           rts     
+
 gx_unknown_e25c:                        ; bank: $000 logical: $e25c
           stz     $2211
           tii     $2211, $2212, $0008
           rts     
-
 ;-------------------------------------------------------------------------------
 ; Wait 7962 cycles.
 ; This should be enough for CDROM to be ready.
@@ -332,64 +338,70 @@ gx_cd_wait:                             ; bank: $000 logical: $e267             
           ply     
           plx     
           rts     
-gx_unknown_e279:                        ; bank: $000 logical: $e279
+;-------------------------------------------------------------------------------
+; SCSI handshake.
+;-------------------------------------------------------------------------------
+gx_scsi_handshake:                          ; bank: $000 logical: $e279
           lda     #$80
-          tsb     cd_control
-le27e_00:
-          lda     cd_status                 ; poll cd status while bit 6 is set
+          tsb     cd_control                ; initiation (PCE) set /ACK signal to 1
+@l0:                                        ; wait for target (CD) to set /REQ signal to 0
+          lda     cd_port
           and     #$40
-          bne     le27e_00
-          lda     #$80
+          bne     @l0
+          lda     #$80                      ; initiator (PCE) set /ACK signal to 0
           trb     cd_control
           rts     
-gx_unknown_e28b:
+;-------------------------------------------------------------------------------
+; Process SCSI command buffer
+;-------------------------------------------------------------------------------
+gx_scsi_cmd:                            ; bank: $000 logical: $e28b
           stz     $220f
-le27e_00:                               ; bank: $000 logical: $e28e
+@retry:                                     ; bank: $000 logical: $e28e
           lda     #$81                      ; try to send command prefix $81, $ff
           sta     cd_command
-          tst     #$80, cd_status
-          beq     le2c2_00
-          lda     #$60
+          tst     #$80, cd_port
+          beq     @go
+          lda     #$60                      ; flush command buffer
           trb     cd_control
-          sta     cd_status
+          sta     cd_port
           lda     #$19
           jsr     gx_cd_wait
           lda     #$ff
           sta     cd_command
-          tst     #$40, cd_status
-          beq     le28e_00
-le2b1_00:                               ; bank: $000 logical: $e2b1
-          jsr     gx_unknown_e279
-le2b4_00:                               ; bank: $000 logical: $e2b4
-          tst     #$40, cd_status
-          bne     le2b1_00
-          tst     #$80, cd_status
-          bne     le2b4_00
-          bra     le28e_00
-le2c2_00:                               ; bank: $000 logical: $e2c2
-          sta     cd_status
+          tst     #$40, cd_port
+          beq     @retry
+@l0:                                        ; wait while the CD is busy
+          jsr     gx_scsi_handshake
+@l1:
+          tst     #$40, cd_port
+          bne     @l0
+          tst     #$80, cd_port
+          bne     @l1
+          bra     @retry
+@go:
+          sta     cd_port
           clx     
-le2c6_00:                               ; bank: $000 logical: $e2c6
-          lda     cd_status
+@busy:
+          lda     cd_port
           and     #$40
-          bne     le2d8_00
+          bne     @next
           lda     #$5a
-le2cf_00:                               ; bank: $000 logical: $e2cf
+@wait:
           dec     A
-          bne     le2cf_00
+          bne     @wait
           nop     
           dex     
-          bne     le2c6_00
-          bra     le28e_00
-le2d8_00:                               ; bank: $000 logical: $e2d8
+          bne     @busy
+          bra     @retry
+@next:
           stz     $222f
           clx     
-le2dc_00:                               ; bank: $000 logical: $e2dc
-          lda     cd_status
+@l2:
+          lda     cd_port                   ; get cd status
           and     #$f8
           sta     $222f
           cmp     #$d0
-          beq     le2f8_00
+          beq     @send
           and     #$b8
           cmp     #$98
           beq     le308_00
@@ -397,8 +409,8 @@ le2dc_00:                               ; bank: $000 logical: $e2dc
           beq     le308_00
           cmp     #$80
           beq     le308_00
-          bra     le2dc_00
-le2f8_00:                               ; bank: $000 logical: $e2f8
+          bra     @l2
+@send:                                      ; send command buffer
           lda     $2210, X
           inx     
           sta     cd_command
@@ -406,8 +418,8 @@ le2f8_00:                               ; bank: $000 logical: $e2f8
           nop     
           nop     
           nop     
-          jsr     gx_unknown_e279
-          bra     le2dc_00
+          jsr     gx_scsi_handshake
+          bra     @l2
 le308_00:                               ; bank: $000 logical: $e308
           lda     $2206
           bne     le339_00
@@ -420,7 +432,7 @@ le308_00:                               ; bank: $000 logical: $e308
 le31b_00:                               ; bank: $000 logical: $e31b
           ldx     <$33
 le31d_00:                               ; bank: $000 logical: $e31d
-          lda     cd_status
+          lda     cd_port
           and     #$f8
           sta     $222f
           bit     #$40
@@ -435,7 +447,8 @@ le31d_00:                               ; bank: $000 logical: $e31d
           lda     #$01
           sta     $220f
 le339_00:                               ; bank: $000 logical: $e339
-          rts     
+          rts
+
 gx_unknown_e33a:                        ; bank: $000 logical: $e33a
           tii     $2020, $2207, $0008
           jsr     gx_unknown_e25c
@@ -454,7 +467,7 @@ gx_unknown_e33a:                        ; bank: $000 logical: $e33a
           beq     le3b0_00
           tma     #$06
           pha     
-          jsr     gx_unknown_e28b
+          jsr     gx_scsi_cmd
           cmp     #$c8
           bne     le393_00
 le36d_00:                               ; bank: $000 logical: $e36d
@@ -491,7 +504,7 @@ le3ac_00:                               ; bank: $000 logical: $e3ac
           stz     $2246
           rts     
 le3b0_00:                               ; bank: $000 logical: $e3b0
-          jsr     gx_unknown_e28b
+          jsr     gx_scsi_cmd
           cmp     #$c8
           bne     le3ed_00
           cla     
@@ -549,7 +562,7 @@ gx_negate:                              ; bank: $000 logical: $e403
 gx_adpcm_read_to_ram:                   ; bank: $000 logical: $e40f
           jsr     gx_negate     ; negates the number of bytes to read
 @start:                         
-          lda     cd_status     ; wait until cdrom is ready
+          lda     cd_port     ; wait until cdrom is ready
           and     #$f8
           sta     $222f
           cmp     #$c8
@@ -583,11 +596,10 @@ gx_adpcm_read_to_ram:                   ; bank: $000 logical: $e40f
           bne     @loop
           bra     @start
 @end:
-          lda     cd_status
+          lda     cd_port
           and     #$f8
           sta     $222f
           rts     
-
 ;-------------------------------------------------------------------------------
 ; Same as gx_adpcm_read_to_ram but the read bytes are transfered to the VDC.
 ; Note that the VDC write register must have been set beforehand.
@@ -595,7 +607,7 @@ gx_adpcm_read_to_ram:                   ; bank: $000 logical: $e40f
 gx_adpcm_read_to_vdc:                   ; bank: $000 logical: $e454
           jsr     gx_negate
 @start:
-          lda     cd_status
+          lda     cd_port
           and     #$f8
           sta     $222f
           cmp     #$c8
@@ -623,7 +635,7 @@ gx_adpcm_read_to_vdc:                   ; bank: $000 logical: $e454
           beq     @end
           bra     @loop
 @end:
-          lda     cd_status
+          lda     cd_port
           and     #$f8
           sta     $222f
           rts     
@@ -635,7 +647,7 @@ gx_adpcm_read_to_vdc:                   ; bank: $000 logical: $e454
           sbc     <$18
           sta     <$18
 le49a_00:                               ; bank: $000 logical: $e49a
-          lda     cd_status
+          lda     cd_port
           and     #$f8
           sta     $222f
           cmp     #$c8
@@ -647,7 +659,7 @@ le4ad_00:                               ; bank: $000 logical: $e4ad
           cly     
           lda     cd_command
           sta     [$15], Y
-          jsr     gx_unknown_e279
+          jsr     gx_scsi_handshake
           inc     <$15
           bne     le4bc_00
           inc     <$16
@@ -657,7 +669,7 @@ le4bc_00:                               ; bank: $000 logical: $e4bc
           inc     <$18
           bne     le49a_00
 le4c4_00:                               ; bank: $000 logical: $e4c4
-          lda     cd_status
+          lda     cd_port
           and     #$b8
           sta     $222f
           rts     
@@ -669,17 +681,20 @@ gx_unknown_e4cd:                        ; bank: $000 logical: $e4cd
           lda     #$06
           rts     
 le4db_00:                               ; bank: $000 logical: $e4db
-          jsr     le4ea_00                          ; what the hell?
+          jsr     gx_scsi_resp
           jsr     gx_unknown_e513
           lda     $2232
           bne     le4e9_00
           stz     $2233
 le4e9_00:                               ; bank: $000 logical: $e4e9
           rts     
-le4ea_00:                               ; bank: $000 logical: $e4ea
+;-------------------------------------------------------------------------------
+; Process SCSI response
+;-------------------------------------------------------------------------------
+gx_scsi_resp:                               ; bank: $000 logical: $e4ea
           stz     $2232
-le4ed_00:                               ; bank: $000 logical: $e4ed
-          lda     cd_status
+le4ed_00:
+          lda     cd_port
           and     #$f8
           sta     $222f
           cmp     #$d8
@@ -690,17 +705,19 @@ le4ed_00:                               ; bank: $000 logical: $e4ed
 le4ff_00:                               ; bank: $000 logical: $e4ff
           lda     cd_command
           sta     $2232
-          jsr     gx_unknown_e279
+          jsr     gx_scsi_handshake
           bra     le4ed_00
 le50a_00:                               ; bank: $000 logical: $e50a
-          lda     cd_status
+          lda     cd_port
           and     #$b8
           sta     $222f
-          rts     
+          rts    
+;-------------------------------------------------------------------------------
+;------------------------------------------------------------------------------- 
 gx_unknown_e513:                        ; bank: $000 logical: $e513php     
           sei     
 le515_00:                               ; bank: $000 logical: $e515
-          lda     cd_status
+          lda     cd_port
           and     #$f8
           cmp     #$f8
           beq     le520_00
@@ -708,10 +725,10 @@ le515_00:                               ; bank: $000 logical: $e515
 le520_00:                               ; bank: $000 logical: $e520
           lda     cd_command
           sta     $222f
-          jsr     gx_unknown_e279
+          jsr     gx_scsi_handshake
           plp     
 le52a_00:                               ; bank: $000 logical: $e52a
-          lda     cd_status
+          lda     cd_port
           and     #$80
           bmi     le52a_00
           rts     
@@ -767,7 +784,7 @@ gx_unknown_e586:                        ; bank: $000 logical: $e586
           sta     $2210
           lda     #$0a
           sta     $2214
-          jsr     gx_unknown_e28b
+          jsr     gx_scsi_cmd
           cmp     #$c8
           bne     le5b7_00
           lda     #$25
@@ -801,7 +818,7 @@ le5d4_00:                               ; bank: $000 logical: $e5d4
           sta     $2210
           lda     <$25
           sta     $2212
-          jsr     gx_unknown_e28b
+          jsr     gx_scsi_cmd
           jsr     gx_unknown_e4cd
           cmp     #$00
           beq     le600_00
@@ -822,7 +839,7 @@ le600_00:                               ; bank: $000 logical: $e600
           sta     $2219
           lda     <$26
           sta     $2212
-          jsr     gx_unknown_e28b
+          jsr     gx_scsi_cmd
           cmp     #$98
           beq     le63f_00
           lda     $2211
@@ -871,7 +888,7 @@ le676_00:                               ; bank: $000 logical: $e676
           jsr     gx_unknown_e25c
           lda     #$da
           sta     $2210
-          jsr     gx_unknown_e28b
+          jsr     gx_scsi_cmd
           jsr     gx_unknown_e4cd
           cmp     #$00
           beq     le68d_00
@@ -887,7 +904,7 @@ le695_00:                               ; bank: $000 logical: $e695
           sta     $2210
           lda     #$0a
           sta     $2211
-          jsr     gx_unknown_e28b
+          jsr     gx_scsi_cmd
           cmp     #$c8
           bne     le6b4_00
           lda     #$0a
@@ -943,7 +960,7 @@ le704_00:                               ; bank: $000 logical: $e704
           trb     adpcm_addr_ctrl
           rts     
 le70f_00:                               ; bank: $000 logical: $e70f
-          lda     cd_status
+          lda     cd_port
           and     #$f8
           sta     $222f
           cmp     #$c8
@@ -959,7 +976,7 @@ le727_00:                               ; bank: $000 logical: $e727
           bne     le727_00
           bra     le70f_00
 le72f_00:                               ; bank: $000 logical: $e72f
-          lda     cd_status
+          lda     cd_port
           and     #$b8
           sta     $222f
           rts     
@@ -984,7 +1001,7 @@ le749_00:                               ; bank: $000 logical: $e749
           sta     $2213
           lda     <$23
           sta     $2214
-          jsr     gx_unknown_e28b
+          jsr     gx_scsi_cmd
           cmp     #$c8
           bne     le779_00
           jsr     le70f_00
@@ -1127,14 +1144,14 @@ le891_00:                               ; bank: $000 logical: $e891
           lda     #$80
           tsb     cd_control
 le89c_00:                               ; bank: $000 logical: $e89c
-          tst     #$40, cd_status
+          tst     #$40, cd_port
           bne     le89c_00
           php     
           sei     
           lda     #$80
           trb     cd_control
 le8a9_00:                               ; bank: $000 logical: $e8a9
-          lda     cd_status
+          lda     cd_port
           and     #$f8
           cmp     #$f8
           bne     le8a9_00
@@ -1143,12 +1160,12 @@ le8a9_00:                               ; bank: $000 logical: $e8a9
           tsb     cd_control
           plp     
 le8bb_00:                               ; bank: $000 logical: $e8bb
-          tst     #$40, cd_status
+          tst     #$40, cd_port
           bne     le8bb_00
           lda     #$80
           trb     cd_control
 le8c6_00:                               ; bank: $000 logical: $e8c6
-          tst     #$80, cd_status
+          tst     #$80, cd_port
           bne     le8c6_00
           lda     $2206
           beq     le8d9_00
