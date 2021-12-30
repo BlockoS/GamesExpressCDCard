@@ -66,7 +66,7 @@ gx_unknown_e000:
 ; $E05D:
           jmp     gx_unknown_e817
 ; $E060:
-          jmp     gx_unknown_e5cd
+          jmp     gx_cd_play
 ; $E063:
           jmp     gx_scsi_cmd
 ; $E066:
@@ -449,6 +449,8 @@ le31d_00:                               ; bank: $000 logical: $e31d
 le339_00:                               ; bank: $000 logical: $e339
           rts
 
+; 2021 : mpr 6 page
+; 2023 : ?
 gx_unknown_e33a:                        ; bank: $000 logical: $e33a
           tii     $2020, $2207, $0008
           jsr     gx_unknown_e25c
@@ -473,15 +475,15 @@ gx_unknown_e33a:                        ; bank: $000 logical: $e33a
 le36d_00:                               ; bank: $000 logical: $e36d
           lda     <$21
           tam     #$06
-          lda     #$00
+          lda     #$00                  ; dest: $c000
           sta     <$15
           lda     #$c0
           sta     <$16
-          lda     #$00
+          lda     #$00                  ; len: 8 KBytes
           sta     <$17
           lda     #$20
           sta     <$18
-          jsr     gx_adpcm_read_to_ram
+          jsr     gx_cd_read_to_ram
           cmp     #$88
           bne     le393_00
           inc     <$21
@@ -526,7 +528,7 @@ le3da_00:                               ; bank: $000 logical: $e3da
           sta     <$17
           lda     #$08
           sta     <$18
-          jsr     gx_adpcm_read_to_vdc
+          jsr     gx_cd_read_to_vdc
           cmp     #$88
           bne     le3ed_00
           dec     <$23
@@ -550,7 +552,7 @@ gx_negate:                              ; bank: $000 logical: $e403
           rts     
 
 ;-------------------------------------------------------------------------------
-; Read data from ADPCM? and store it to RAM.
+; Read data from CD and store it to RAM.
 ; Parameters:
 ;   $2017-18 : the number of bytes to read.
 ;   $2015-16 : the memory address where the read data will be stored
@@ -559,10 +561,10 @@ gx_negate:                              ; bank: $000 logical: $e403
 ;   A : CD status
 ;   X : Remaining number of 256 bytes blocs in the current sector 
 ;-------------------------------------------------------------------------------
-gx_adpcm_read_to_ram:                   ; bank: $000 logical: $e40f
+gx_cd_read_to_ram:              ; bank: $000 logical: $e40f
           jsr     gx_negate     ; negates the number of bytes to read
 @start:                         
-          lda     cd_port     ; wait until cdrom is ready
+          lda     cd_port       ; wait until cdrom is ready
           and     #$f8
           sta     $222f
           cmp     #$c8
@@ -582,7 +584,7 @@ gx_adpcm_read_to_ram:                   ; bank: $000 logical: $e40f
           cly     
           ldx     #$08          ; you can't read more than 8*256 bytes (a whole sector)
 @loop:
-          lda     adpcm_addr_l
+          lda     cd_data
           sta     [$15], Y
           inc     <$17          ; check if we read all the requested number of bytes
           bne     @next
@@ -601,10 +603,10 @@ gx_adpcm_read_to_ram:                   ; bank: $000 logical: $e40f
           sta     $222f
           rts     
 ;-------------------------------------------------------------------------------
-; Same as gx_adpcm_read_to_ram but the read bytes are transfered to the VDC.
+; Same as gx_cd_read_to_ram but the read bytes are transfered to the VDC.
 ; Note that the VDC write register must have been set beforehand.
 ;-------------------------------------------------------------------------------
-gx_adpcm_read_to_vdc:                   ; bank: $000 logical: $e454
+gx_cd_read_to_vdc:                      ; bank: $000 logical: $e454
           jsr     gx_negate
 @start:
           lda     cd_port
@@ -623,7 +625,7 @@ gx_adpcm_read_to_vdc:                   ; bank: $000 logical: $e454
           bne     @wait
           cly     
 @loop:
-          lda     adpcm_addr_l
+          lda     cd_data
           sta     video_data_l, Y
           say     
           inc     A
@@ -808,7 +810,17 @@ le5b7_00:                               ; bank: $000 logical: $e5b7
 le5cb_00:                               ; bank: $000 logical: $e5cb
           pla     
           rts     
-gx_unknown_e5cd:                        ; bank: $000 logical: $e5cd
+;-------------------------------------------------------------------------------
+; CD Audio playback; Parameters:
+; Parameters:
+;   $2020 - Play mode.
+;   $2025 - Start track number.
+;   $2026 -  End track number.
+;
+; Return:
+;   A - 00 ok else sub error code.
+;-------------------------------------------------------------------------------
+gx_cd_play:                             ; bank: $000 logical: $e5cd
           tii     $2020, $2207, $0008
 le5d4_00:                               ; bank: $000 logical: $e5d4
           jsr     gx_unknown_e25c
@@ -969,7 +981,7 @@ le70f_00:                               ; bank: $000 logical: $e70f
           beq     le72f_00
           bra     le70f_00
 le721_00:                               ; bank: $000 logical: $e721
-          lda     adpcm_addr_l
+          lda     cd_data
           sta     adpcm_ram_offset
 le727_00:                               ; bank: $000 logical: $e727
           tst     #$04, adpcm_status
@@ -988,7 +1000,7 @@ gx_unknown_e738:                        ; bank: $000 logical: $e738
 le742_00:                               ; bank: $000 logical: $e742
           tii     $2020, $2207, $0008
 le749_00:                               ; bank: $000 logical: $e749
-          tii     $2021, adpcm_addr_l, $0002
+          tii     $2021, cd_data, $0002
           jsr     le6ca_00
           jsr     gx_unknown_e25c
           lda     #$08
@@ -1031,9 +1043,9 @@ gx_unknown_e7a8:                        ; bank: $000 logical: $e7a8
 le7ab_00:                               ; bank: $000 logical: $e7ab
           jsr     gx_unknown_e6ea
           bne     le7ab_00
-          tii     $201a, adpcm_addr_l, $0002
+          tii     $201a, cd_data, $0002
           jsr     gx_unknown_e6da
-          tii     $201e, adpcm_addr_l, $0002
+          tii     $201e, cd_data, $0002
           jsr     le704_00
           lda     adpcm_ram_offset
 le7c7_00:                               ; bank: $000 logical: $e7c7
@@ -1057,7 +1069,7 @@ le7de_00:                               ; bank: $000 logical: $e7de
 gx_unknown_e7e7:                        ; bank: $000 logical: $e7e7
           tst     #$03, adpcm_dma_ctrl
           bne     le816_00
-          tii     $201a, adpcm_addr_l, $0002
+          tii     $201a, cd_data, $0002
           jsr     le6ca_00
 le7f7_00:                               ; bank: $000 logical: $e7f7
           lda     [$1c]
@@ -1087,14 +1099,14 @@ gx_unknown_e817:                        ; bank: $000 logical: $e817
           bcs     le851_00
           sta     adpcm_playback_rate
           lda     <$1a
-          sta     adpcm_addr_l
+          sta     cd_data
           lda     <$1b
-          sta     adpcm_addr_h
+          sta     cd_data+1
           jsr     le852_00
           lda     <$1e
-          sta     adpcm_addr_l
+          sta     cd_data
           lda     <$1f
-          sta     adpcm_addr_h
+          sta     cd_data+1
           lda     #$10
           tsb     adpcm_addr_ctrl
           lda     #$10
