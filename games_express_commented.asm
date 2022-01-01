@@ -24,7 +24,7 @@ gx_unknown_e000:
 ; $E01E:
           jmp     gx_read_joypad
 ; $E021:
-          jmp     lfce4_00
+          jmp     gx_unknown_fce4
 ; $E024:
           jmp     gx_vdc_load_vram
 ; $E027:
@@ -96,7 +96,7 @@ gx_unknown_e000:
 ; $E08A:
           jmp     lfe11_00
 ; $E08D:
-          jmp     lff2f_00
+          jmp     gx_unknown_ff2f
 ; $E090:
           jmp     gx_vdc_clear_tiles
 ; $E093:
@@ -483,7 +483,7 @@ le36d_00:                               ; bank: $000 logical: $e36d
           sta     <$17
           lda     #$20
           sta     <$18
-          jsr     gx_cd_read_to_ram
+          jsr     gx_cd_read
           cmp     #$88
           bne     le393_00
           inc     <$21
@@ -561,7 +561,7 @@ gx_negate:                              ; bank: $000 logical: $e403
 ;   A : CD status
 ;   X : Remaining number of 256 bytes blocs in the current sector 
 ;-------------------------------------------------------------------------------
-gx_cd_read_to_ram:              ; bank: $000 logical: $e40f
+gx_cd_read:              	  ; bank: $000 logical: $e40f
           jsr     gx_negate     ; negates the number of bytes to read
 @start:                         
           lda     cd_port       ; wait until cdrom is ready
@@ -641,6 +641,7 @@ gx_cd_read_to_vdc:                      ; bank: $000 logical: $e454
           and     #$f8
           sta     $222f
           rts     
+le48f_00:                               ; bank: $000 logical: $e48f
           cla     
           sec     
           sbc     <$17
@@ -2107,32 +2108,32 @@ gx_read_joypad:                         ; bank: $000 logical: $ef41
           pha     
           pla     
           nop     
-          lda     $22d3, Y
-          sta     $22ce, Y
+          lda     gx_joypad, Y
+          sta     gx_joyold, Y
           lda     joyport
           pha     
           and     #$0f
           eor     #$0f
           tax     
-          lda     lefb9_00, X
+          lda     gx_unknown_efb9, X
           stz     joyport
           pla     
           asl     A
           asl     A
           asl     A
           asl     A
-          sta     $22d3, Y
+          sta     gx_joypad, Y
           lda     joyport
           and     #$0f
-          ora     $22d3, Y
+          ora     gx_joypad, Y
           eor     #$ff
-          sta     $22d3, Y
-          eor     $22ce, Y
+          sta     gx_joypad, Y
+          eor     gx_joyold, Y
           pha     
-          and     $22d3, Y
-          sta     $22d8, Y
+          and     gx_joypad, Y
+          sta     gx_joytrg, Y
           pla     
-          and     $22ce, Y
+          and     gx_joyold, Y
           sta     $22dd, Y
           iny     
           cpy     #$05
@@ -2140,12 +2141,12 @@ gx_read_joypad:                         ; bank: $000 logical: $ef41
           cly     
 @check_soft_reset:                      ; bank: $000 logical: $ef95
           lda     $22cd
-          and     $efb4, Y
+          and     gx_unknonwn_efb4, Y
           beq     @next_joypad
-          lda     $22d8, Y
+          lda     gx_joytrg, Y
           cmp     #$04
           bne     @next_joypad
-          lda     $22d3, Y
+          lda     gx_joypad, Y
           cmp     #$0c
           bne     @next_joypad
           jmp     gx_soft_reset
@@ -2153,20 +2154,18 @@ gx_read_joypad:                         ; bank: $000 logical: $ef41
           iny     
           cpy     #$05
           bcc     @check_soft_reset
-          rts     
-          ora     [$02, X]                              ; [todo] this looks like data
-          tsb     <$08
-          bpl     lefb9_00
-          brk     
-          sxy     
-          ora     [$04, X]
-          bbs7    <$03, lefc0_00
-          asl     <$07
-          bbs7    <$ff, lefcb_00
-          bbs7    <$ff, lefc8_00
+          rts    
+
+gx_unknown_efb4:                        ; bank: $000 logical: $efb4
+          .db $01,$02,$04,$08,$10
+gx_unknown_efb9:                        ; bank: $000 logical: $efb9
+          .db $ff,$00,$02,$01,$04
+          .db $ff,$03,$ff,$06,$07
+          .db $ff,$ff,$05,$ff,$ff
+          .db $ff
+
 gx_display_init:                        ; bank: $000 logical: $efc9
           stz     <gx_scroll_x
-lefcb_00:                               ; bank: $000 logical: $efcb
           stz     <gx_scroll_x+1
           stz     <gx_scroll_y
           stz     <gx_scroll_y+1
@@ -3343,7 +3342,7 @@ lf834_00:                               ; bank: $000 logical: $f834
           asl     A
           ora     <$06
           tay     
-          lda     $f864, Y
+          lda     gx_unknown_data_00, Y
           sta     <$00
           lda     <$04
           bmi     lf857_00
@@ -3491,6 +3490,9 @@ gx_menu:                                ; bank: $000 logical: $f980
           jsr     led7f_00
           jsr     gx_unknown_e9e2
           jmp     gx_menu
+;-------------------------------------------------------------------------------
+;
+;-------------------------------------------------------------------------------
 gx_vdc_clear_tiles:                     ; bank: $000 logical: $f989
           stz     <$46
           stz     <$47
@@ -3498,10 +3500,13 @@ gx_vdc_clear_tiles:                     ; bank: $000 logical: $f989
           stz     <$49
           stz     <$4a
           jmp     gx_unknown_f996
+;-------------------------------------------------------------------------------
+;
+;-------------------------------------------------------------------------------
 gx_unknown_f996:                        ; bank: $000 logical: $f996
           ldx     #$0f
           lda     #$ff
-lf99a_00:                               ; bank: $000 logical: $f99a
+lf99a_00:                               ; fill 2791 to 27a1 with ff
           sta     $2791, X
           dex     
           bpl     lf99a_00
@@ -3510,7 +3515,7 @@ lf99a_00:                               ; bank: $000 logical: $f99a
           stz     <$4d
           lda     #$05
           sta     vdc_reg
-          sta     video_reg_l
+          sta     video_reg_l           ; sprite collision + scanline interrupt = ON, vertical blanking interrupt = OFF
           lda     vdc_control+1
           and     #$e7
           sta     vdc_control+1
@@ -3533,10 +3538,11 @@ lf99a_00:                               ; bank: $000 logical: $f99a
           st1     #$00
           st2     #$00
           st1     #$00
-          st2     #$00
+          st2     #$00                  ; 32 bytes = 1 tile
           dex     
           bne     @loop
-          rts     
+          rts    
+
 lf9e5_00:                               ; bank: $000 logical: $f9e5
           stz     <$06
           stz     <$07
@@ -3596,24 +3602,27 @@ lfa2b_00:                               ; bank: $000 logical: $fa2b
           sta     $26d0, Y
           inc     $2790
 lfa61_00:                               ; bank: $000 logical: $fa61
-          rts     
+          rts   
+;-------------------------------------------------------------------------------
+; update SATB
+;-------------------------------------------------------------------------------
 lfa62_00:                               ; bank: $000 logical: $fa62
           stz     $2790
           ldx     #$0f
           lda     #$00
-          sta     vdc_reg
+          sta     vdc_reg               ; set VRAM write pointer
           sta     video_reg_l
           inc     <$4a
           lda     <$4a
           lsr     A
-          lda     #$08
+          lda     #$08                  ; SATB is alternatively set between $0800 and $0900.
           adc     #$00
           st1     #$00
           sta     video_data_h
           lda     <$49
           lsr     A
           bcc     lfab5_00
-          lda     #$02
+          lda     #$02                  ; set VRAM write latch
           sta     vdc_reg
           sta     video_reg_l
 lfa8a_00:                               ; bank: $000 logical: $fa8a
@@ -3642,6 +3651,7 @@ lfaa0_00:                               ; bank: $000 logical: $faa0
           stz     <$4b
           bcc     lfae5_00
           rts     
+
 lfab5_00:                               ; bank: $000 logical: $fab5
           lda     #$02
           sta     vdc_reg
@@ -3681,7 +3691,9 @@ lfae7_00:                               ; bank: $000 logical: $fae7
           st2     #$00
           dey     
           bne     lfae7_00
-          rts     
+          rts    
+
+
 lfaf3_00:                               ; bank: $000 logical: $faf3
           sxy     
           lda     $2690, X
@@ -3691,52 +3703,53 @@ lfaf3_00:                               ; bank: $000 logical: $faf3
           ldy     #$01
           lda     [$00]
           beq     lfb59_00
-          sta     <$06
+          sta     <$06                  ; entry count
 lfb06_00:                               ; bank: $000 logical: $fb06
           lda     <$4b
           cmp     #$40
-          bcs     lfb5a_00
+          bcs     lfb5a_00              ; set SATB entry
           inc     <$4b
           lda     [$00], Y
           iny     
           adc     $24d0, X
-          sta     video_data_l
+          sta     video_data_l          ; Y LSB
           lda     [$00], Y
           iny     
           adc     $2510, X
-          sta     video_data_h
+          sta     video_data_h          ; Y MSB
           lda     [$00], Y
           iny     
           clc     
           adc     $2550, X
-          sta     video_data_l
+          sta     video_data_l          ; X LSB
           lda     [$00], Y
           iny     
           adc     $2590, X
-          sta     video_data_h
+          sta     video_data_h          ; X MSB
           lda     [$00], Y
           iny     
           adc     $25d0, X
-          sta     video_data_l
+          sta     video_data_l          ; Pattern address MSB
           lda     [$00], Y
           iny     
           adc     $2610, X
-          sta     video_data_h
+          sta     video_data_h          ; Pattern address LSB
           lda     [$00], Y
           iny     
           clc     
           adc     $2650, X
-          sta     video_data_l
+          sta     video_data_l          ; Palette index + priority
           lda     [$00], Y
           iny     
-          sta     video_data_h
+          sta     video_data_h          ; Width + horizontal flip + height + vertical flip
           dec     <$06
           bne     lfb06_00
 lfb59_00:                               ; bank: $000 logical: $fb59
           clc     
 lfb5a_00:                               ; bank: $000 logical: $fb5a
           sxy     
-          rts     
+          rts    
+
 lfb5c_00:                               ; bank: $000 logical: $fb5c
           lda     <$50
           sta     $27b5
@@ -3804,7 +3817,7 @@ lfbc3_00:                               ; bank: $000 logical: $fbc3
           jsr     gx_unknown_e9e4
           lda     [$4e]
           tay     
-          lda     $22d8
+          lda     gx_joytrg
           bit     #$58
           bne     lfbea_00
           bit     #$24
@@ -3966,33 +3979,41 @@ gx_msg_on:                              ; bank: $000 logical: $fcdc
           db " ON",$00
 gx_msg_off:                             ; bank: $000 logical: $fce0
           db "OFF",$00 
-
+;-------------------------------------------------------------------------------
+; decode gfx to RAM ?
+; Parameters:
+;   $27ba - source bank
+;   $2054 - source address LSB 
+;   $2055 - source address MSB (mapped to mpr 2)
+;   $2052 - destination address LSB 
+;   $2053 - destination address MSB
+;-------------------------------------------------------------------------------
 gx_unknown_fce4:                        ; bank: $000 logical: $fce4
           lda     <$55
-lfce6_00:                               ; bank: $000 logical: $fce6
+lfce6_00:                               ; remap pointer
           cmp     #$60
           bcc     lfcf1_00
           sbc     #$20
-          inc     $27ba
+          inc     $27ba                 ; next page/bank
           bra     lfce6_00
-lfcf1_00:                               ; bank: $000 logical: $fcf1
+lfcf1_00:
           sta     <$55
-          tma     #$02
+          tma     #$02                  ; save mpr 2
           sta     $27bb
-          tma     #$03
+          tma     #$03                  ; save mpr 3
           sta     $27bc
-          lda     $27ba
+          lda     $27ba                 ; map source page ot mpr 2 and 3
           tam     #$02
           inc     A
           tam     #$03
-          lda     [$54]
+          lda     [$54]                 ; $27b8 = [$54]
           sta     $27b8
-          inc     <$54
+          inc     <$54                  ; increment source pointer
           bne     lfd10_00
           inc     <$55
-lfd10_00:                               ; bank: $000 logical: $fd10
+lfd10_00:
           clx     
-lfd11_00:                               ; bank: $000 logical: $fd11
+lfd11_00:                               ; remap source pointer if nedeed
           lda     <$55
           cmp     #$60
           bcc     lfd22_00
@@ -4002,7 +4023,7 @@ lfd11_00:                               ; bank: $000 logical: $fd11
           tam     #$02
           inc     A
           tam     #$03
-lfd22_00:                               ; bank: $000 logical: $fd22
+lfd22_00:
           lda     [$54]
           cmp     #$ff
           beq     lfd33_00
@@ -4011,8 +4032,8 @@ lfd22_00:                               ; bank: $000 logical: $fd22
           bit     #$40
           beq     lfd76_00
           jmp     lfddb_00
-lfd33_00:                               ; bank: $000 logical: $fd33
-          inc     <$54
+lfd33_00:
+          inc     <$54                  ; increment source pointer
           bne     lfd39_00
           inc     <$55
 lfd39_00:                               ; bank: $000 logical: $fd39
@@ -4451,14 +4472,14 @@ lc05e_01:                               ; bank: $001 logical: $c05e
 ;-------------------------------------------------------------------------------
 ; Display atlernatively 3 sprites and "boot" cdrom when the user presses RUN.
 ;-------------------------------------------------------------------------------
-gx_main_screen:                         ; bank: $001 logical: $c07f
+gx_main_screen:                             ; bank: $001 logical: $c07f
           ldx     #$c0
           ldy     #$99                      ; [todo] what's at $c099?
           jsr     gx_proc_load
           pha     
 @wait_run:                                  ; wait for run button o be pressed.
           jsr     gx_unknown_e9e2
-          lda     $22d8                     ; get joypad 0 state
+          lda     gx_joytrg                 ; get joypad 0 state
           and     #$08                      ; check if RUN bit is set
           beq     @wait_run
           plx     
@@ -4466,3 +4487,124 @@ gx_main_screen:                         ; bank: $001 logical: $c07f
           jsr     gx_unknown_f996
           rts     
 
+gx_unknown_c099:                        ; bank: $001 logical: $c099
+          .dw $gx_main_screen_anim
+          .dw $8080
+;-------------------------------------------------------------------------------
+; Main screen animation.
+; Displays alternatively "set a disk", "and", "push run button" sprites.
+;-------------------------------------------------------------------------------     
+gx_main_screen_anim:                    ; bank: $001 logical: $c09d
+          jsr     gx_unknown_f996
+          jsr     gx_unknown_e9e2
+          jsr     lfa62_00
+          lda     #$05
+          jsr     gx_unknown_e9e4
+lc0ab_01:                               ; bank: $001 logical: $c0ab
+          lda     #low(gx_set_a_disk_satb)
+          sta     <$00
+          lda     #high(gx_set_a_disk_satb)
+          sta     <$01                  ; c0f2 (set a disk)
+          cla     
+          jsr     lf9e5_00              
+          jsr     lfa62_00              ; update SATB
+          lda     #$1e
+          jsr     gx_unknown_e9e4
+
+          lda     #low(gx_and_satb)
+          sta     <$00
+          lda     #high(gx_and_satb)
+          sta     <$01                  ; c10b (and)
+          cla     
+          jsr     lf9e5_00
+          jsr     lfa62_00
+          lda     #$1e
+          jsr     gx_unknown_e9e4
+
+          lda     #low(gx_push_run_button_satb)
+          sta     <$00
+          lda     #high(gx_push_run_button_satb)
+          sta     <$01                  ; c11c (push run button)
+          cla     
+          jsr     lf9e5_00
+          jsr     lfa62_00
+          lda     #$1e
+          jsr     gx_unknown_e9e4
+
+          jsr     lfa62_00
+          lda     #$14
+          jsr     gx_unknown_e9e4       ; (clear)
+          jmp     lc0ab_01
+
+gx_set_a_disk_satb:                     ; bank: $001 logical: $c0f2
+          .db $03                       ; 3 SATB entries
+          .db $d0                       ; entry #0: Y LSB (208)
+          .db $00                       ;           Y MSB
+          .db $30                       ;           X LSB (48)
+          .db $00                       ;           X MSB
+          .db $80                       ;           Pattern address MSB ($280 => $5000)
+          .db $02                       ;           Pattern address LSB
+          .db $80                       ;           Palette index (0) + prioriry (foreground) 
+          .db $31                       ;           Width (32) + horizontal flip (normal) + height (64) + vertical flip (normal)
+          .db $d0                       ; entry #1  (Y: 208)
+          .db $00
+          .db $50                       ;           (X: 80)
+          .db $00
+          .db $a0                       ;           (Pattern: $2a0)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $31                       ;           (W: 32, HFlip: normal, H:64, VFlip: Normal)
+          .db $d0                       ; entry #2  (Y: 208)
+          .db $00
+          .db $70                       ;           (X: 112)
+          .db $00
+          .db $c0                       ;           (Pattern: $2c0)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $30                       ;           (W: 16, HFlip: normal, H:64, VFlip: Normal)
+
+gx_and_satb:                            ; bank: $001 logical: $c10b
+          .db $02                       ; 2 SATB entries
+          .db $f0                       ; entry #0  (Y: 240)
+          .db $00
+          .db $80                       ;           (X: 128)
+          .db $00
+          .db $c2                       ;           (Pattern: $2c2)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $10                       ;           (W: 16, HFlip: normal, H:32, VFlip: Normal)
+          .db $f0                       ; entry #1  (Y: 240)
+          .db $00
+          .db $90                       ;           (X: 144)
+          .db $00
+          .db $e0                       ;           (Pattern: $2e0)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $11                       ;           (W: 32, HFlip: normal, H:32, VFlip: Normal)
+
+gx_push_run_button_satb:                ; bank: $001 logical: $c11c
+          .db $03                       ; 3 SATB entries
+          .db $d0                       ; entry #0  (Y: 208)
+          .db $00
+          .db $a0                       ;           (X: 160)
+          .db $00
+          .db $90                       ;           (Pattern: $290)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $31                       ;           Width (32) + horizontal flip (normal) + height (64) + vertical flip (normal)
+          .db $d0                       ; entry #1  (Y: 208)
+          .db $00
+          .db $c0                       ;           (X: 192)
+          .db $00
+          .db $b0                       ;           (Pattern: $2b0)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $31                       ;           Width (32) + horizontal flip (normal) + height (64) + vertical flip (normal)
+          .db $d0                       ; entry #2  (Y: 208)
+          .db $00
+          .db $e0                       ;           (X: 224)
+          .db $00
+          .db $d0                       ;           (Pattern: $2d0)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $31                       ;           Width (32) + horizontal flip (normal) + height (64) + vertical flip (normal)

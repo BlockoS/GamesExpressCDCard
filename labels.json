@@ -35,7 +35,7 @@
 	{ "name": "@loop", "logical": "e434", "page": "00" },
 	{ "name": "@next", "logical": "e441", "page": "00" },
     { "name": "@end", "logical": "e44b", "page": "00" },
-    { "name": "gx_adpcm_read_to_vdc", "logical": "e454", "page": "00" },
+    { "name": "gx_cd_read_to_vdc", "logical": "e454", "page": "00" },
 	{ "name": "@start", "logical": "e457", "page": "00" },	
 	{ "name": "@ok", "logical": "e46a", "page": "00" },
 	{ "name": "@wait", "logical": "e46c", "page": "00" },
@@ -101,6 +101,7 @@
     { "name": "@read_loop", "logical": "ef4c", "page": "00" },
     { "name": "@check_soft_reset", "logical": "ef95", "page": "00" },
     { "name": "@next_joypad", "logical": "efae", "page": "00" },
+    { "name": "gx_unknown_efb9", "logical": "efb9", "page": "00" },
     { "name": "gx_display_init", "logical": "efc9", "page": "00" },
     { "name": "gx_vdc_init", "logical": "efed", "page": "00" },
     { "name": "@vdc_set_reg", "logical": "f003", "page": "00" },
@@ -137,6 +138,9 @@
     { "name": "gx_msg_off", "logical": "fce0", "page":"00"},
 
     { "name": "gx_unknown_ff75", "logical": "ff75", "page":"00"},
+
+    { "name": "@wait_run", "logical": "c087", "page": "01"},
+    { "name": "gx_main_screen_anim", "logical": "c09d", "page": "01"},
 
     { "name": "irq_vectors", "logical": "fff6", "page": "00" },
     { "name": "video_reg_l", "logical": "0000", "page": "ff" },
@@ -208,5 +212,7 @@
     { "name": "gx_proc.last", "logical": "22bd", "page": "f8" },
     { "name": "gx_proc.lock", "logical": "22be", "page": "f8"},
 
-    { "name": "@wait_run", "logical": "c087", "page": "01"}
+    { "name": "gx_joyold", "logical": "22ce", "page": "f8"},
+    { "name": "gx_joypad", "logical": "22d3", "page": "f8"},
+    { "name": "gx_joytrg", "logical": "22d8", "page": "f8"}
 ]
