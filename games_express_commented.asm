@@ -98,7 +98,7 @@ gx_unknown_e000:
 ; $E08D:
           jmp     gx_unknown_ff2f
 ; $E090:
-          jmp     gx_vdc_clear_tiles
+          jmp     gx_vdc_clear_satb
 ; $E093:
           jmp     lf9e5_00
 ; $E096:
@@ -106,7 +106,7 @@ gx_unknown_e000:
 ; $E099:
           jmp     lfa62_00
 ; $E09C:
-          jmp     gx_unknown_f996
+          jmp     gx_vdc_clear_satb_2
 ; $E09F:
           jmp     gx_display_init
 ; $E0A2:
@@ -453,7 +453,7 @@ le339_00:                               ; bank: $000 logical: $e339
 ; 2023 : ?
 gx_unknown_e33a:                        ; bank: $000 logical: $e33a
           tii     $2020, $2207, $0008
-          jsr     gx_unknown_e25c
+          jsr     gx_unknown_e25c       ; clears the 9 bytes starting at $2211
           lda     #$08
           sta     $2210
           lda     <$27
@@ -466,14 +466,14 @@ gx_unknown_e33a:                        ; bank: $000 logical: $e33a
           sta     $2214
           lda     <$20
           cmp     #$ff
-          beq     le3b0_00
-          tma     #$06
+          beq     @vdc.copy
+          tma     #$06                  ; backup MPR 6
           pha     
           jsr     gx_scsi_cmd
           cmp     #$c8
-          bne     le393_00
-le36d_00:                               ; bank: $000 logical: $e36d
-          lda     <$21
+          bne     @end
+@loop:                                  ; bank: $000 logical: $e36d
+          lda     <$21                  ; map CDROM RAM
           tam     #$06
           lda     #$00                  ; dest: $c000
           sta     <$15
@@ -484,33 +484,33 @@ le36d_00:                               ; bank: $000 logical: $e36d
           lda     #$20
           sta     <$18
           jsr     gx_cd_read
-          cmp     #$88
-          bne     le393_00
-          inc     <$21
-          lda     <$23
+          cmp     #$88                  ; check if the CD read is successful
+          bne     @end
+          inc     <$21                  ; next 8KB RAM
+          lda     <$23                  ; we just read 8KB (4 sectors) 
           sec     
           sbc     #$04
-          beq     le393_00
-          bpl     le36d_00
-le393_00:                               ; bank: $000 logical: $e393
-          pla     
+          beq     @end                  ; repeat until we read all sectors
+          bpl     @loop
+@end:                                   ; bank: $000 logical: $e393
+          pla                           ; restore MPR 6
           tam     #$06
           jsr     gx_unknown_e4cd
           cmp     #$00
-          beq     le3ac_00
+          beq     @quit
           jsr     gx_unknown_e532
-          bcs     le3ac_00
+          bcs     @quit
           tii     $2207, $2020, $0008
           jmp     gx_unknown_e33a
-le3ac_00:                               ; bank: $000 logical: $e3ac
+@quit:                                  ; bank: $000 logical: $e3ac
           stz     $2246
           rts     
-le3b0_00:                               ; bank: $000 logical: $e3b0
+@vdc.copy:                              ; bank: $000 logical: $e3b0
           jsr     gx_scsi_cmd
           cmp     #$c8
           bne     le3ed_00
           cla     
-          jsr     gx_vdc_set_ctrl_hi
+          jsr     gx_vdc_set_ctrl_hi    ; copy data to VRAM
           lda     #$01
           sta     $2246
           lda     #$00
@@ -536,11 +536,12 @@ le3da_00:                               ; bank: $000 logical: $e3da
 le3ed_00:                               ; bank: $000 logical: $e3ed
           jsr     gx_unknown_e4cd
           cmp     #$00
-          beq     le3ac_00
+          beq     @quit
           jsr     gx_unknown_e532
-          bcs     le3ac_00
+          bcs     @quit
           tii     $2207, $2020, $0008
           jmp     gx_unknown_e33a
+
 gx_negate:                              ; bank: $000 logical: $e403
           cla     
           sec     
@@ -3394,30 +3395,30 @@ gx_main:                                ; bank: $000 logical: $f8a4
           jsr     gx_vdc_disable_display
           cla     
           jsr     gx_vdc_set_ctrl_hi
-          jsr     gx_vdc_clear_tiles
+          jsr     gx_vdc_clear_satb
           jsr     gx_vdc_enable_interrupts
           cli     
           lda     $18c1                         ; check if the game is running on a Super CDRom 2
           cmp     #$aa
-          bne     lf8eb_00
+          bne     @not_scd2
           lda     $18c2
           cmp     #$55
-          bne     lf8eb_00
+          bne     @not_scd2
           lda     #$aa                          ; this is a Super CDRom 2
           sta     $18c0
           lda     #$55
           sta     $18c0
-          lda     #$68
-          sta     $2204
-          lda     #$20
+          lda     #$68                          ; Super CDROM 2 has 64 KB of extra RAM starging at segment $80
+          sta     $2204                         ; and 192 KB starting at $64
+          lda     #$20                          ; so there's a total of 256KB of extram (32x8KB)
           sta     $2205
-          bra     lf8f5_00
-lf8eb_00:                               ; bank: $000 logical: $f8eb
-          lda     #$80
-          sta     $2204
+          bra     @l0
+@not_scd2:                              ; bank: $000 logical: $f8eb
+          lda     #$80                          ; here it assumes it is an IFU-30 (weird things will happen on a stock pcengine) 
+          sta     $2204                         ; extra work RAM starts at segment $80
           lda     #$08
-          sta     $2205
-lf8f5_00:                               ; bank: $000 logical: $f8f5
+          sta     $2205                         ; and it's 64 KB (8x8KB)
+@l0:                                    ; bank: $000 logical: $f8f5
           lda     #$01
           tam     #$06
           jsr     gx_load_gfx_data
@@ -3479,8 +3480,8 @@ lf942_00:                               ; bank: $000 logical: $f942
 lf96e_00:                               ; bank: $000 logical: $f96e
           lda     #$01
           tam     #$06
-          jsr     gx_unknown_c053
-          jmp     lf8fc_00
+          jsr     gx_error_msg          ; display error message
+          jmp     lf8fc_00              ; "reset" after a while
 
 gx_boot:                                ; bank: $000 logical: $f978
           .db "BOOT"
@@ -3491,19 +3492,19 @@ gx_menu:                                ; bank: $000 logical: $f980
           jsr     gx_unknown_e9e2
           jmp     gx_menu
 ;-------------------------------------------------------------------------------
-;
+; Clears the SATB at $0800
 ;-------------------------------------------------------------------------------
-gx_vdc_clear_tiles:                     ; bank: $000 logical: $f989
+gx_vdc_clear_satb:                      ; bank: $000 logical: $f989
           stz     <$46
           stz     <$47
           stz     <$48
           stz     <$49
           stz     <$4a
-          jmp     gx_unknown_f996
+          jmp     gx_vdc_clear_satb_2
 ;-------------------------------------------------------------------------------
 ;
 ;-------------------------------------------------------------------------------
-gx_unknown_f996:                        ; bank: $000 logical: $f996
+gx_vdc_clear_satb_2:                    ; bank: $000 logical: $f996
           ldx     #$0f
           lda     #$ff
 lf99a_00:                               ; fill 2791 to 27a1 with ff
@@ -3523,13 +3524,13 @@ lf99a_00:                               ; fill 2791 to 27a1 with ff
           lda     #$00                  ; VRAM write pointer
           sta     vdc_reg
           sta     video_reg_l
-          st1     #$00                  ; set to past the BAT
+          st1     #$00                  ; set VRAM write pointer to SATB
           st2     #$08
           lda     #$02                  ; VRAM data register
           sta     vdc_reg
           sta     video_reg_l
           ldx     #$80                          
-          ldx     #$00                  ; clear 256 tiles
+          ldx     #$00                  ; clear whole SATB entries
 @loop:                                  ; bank: $000 logical: $f9d1
           st1     #$00
           st2     #$00
@@ -3538,7 +3539,7 @@ lf99a_00:                               ; fill 2791 to 27a1 with ff
           st1     #$00
           st2     #$00
           st1     #$00
-          st2     #$00                  ; 32 bytes = 1 tile
+          st2     #$00                  ; 32 bytes = 1 SATB entry
           dex     
           bne     @loop
           rts    
@@ -4446,27 +4447,30 @@ gx_load_gfx_data:                                       ; bank: $001 logical: $c
           jsr     gx_vdc_enable_display
           rts     
 
-gx_unknown_c053:                        ; bank: $001 logical: $c053
+;-------------------------------------------------------------------------------
+; Display a blinking "ERROR" sprite for 
+;-------------------------------------------------------------------------------
+gx_error_msg:                           ; bank: $001 logical: $c053
           jsr     gx_unknown_e9e2
-          jsr     gx_unknown_f996
+          jsr     gx_vdc_clear_satb_2
           jsr     gx_unknown_e9e2
-          ldx     #$0a
-lc05e_01:                               ; bank: $001 logical: $c05e
+          ldx     #$0a                  ; make the error message blink for 5 seconds (10 * (10 + 20) frames)
+@loop:                                  ; bank: $001 logical: $c05e
           phx     
-          jsr     gx_unknown_f996
+          jsr     gx_vdc_clear_satb_2
           lda     #$0a
-          jsr     gx_unknown_e9e4
-          lda     #$36
+          jsr     gx_unknown_e9e4       ; wait for 10 frames
+          lda     #low(gx_error_satb)
           sta     <$00
-          lda     #$c1
+          lda     #high(gx_error_satb)
           sta     <$01
           jsr     lf9e5_00
-          jsr     lfa62_00
+          jsr     lfa62_00              ; update SATB
           lda     #$14
-          jsr     gx_unknown_e9e4
+          jsr     gx_unknown_e9e4       ; wait for 20 frames
           plx     
           dex     
-          bpl     lc05e_01
+          bpl     @loop
           rts     
 
 ;-------------------------------------------------------------------------------
@@ -4484,7 +4488,7 @@ gx_main_screen:                             ; bank: $001 logical: $c07f
           beq     @wait_run
           plx     
           jsr     gx_unknown_e9d7
-          jsr     gx_unknown_f996
+          jsr     gx_vdc_clear_satb_2
           rts     
 
 gx_unknown_c099:                        ; bank: $001 logical: $c099
@@ -4495,7 +4499,7 @@ gx_unknown_c099:                        ; bank: $001 logical: $c099
 ; Displays alternatively "set a disk", "and", "push run button" sprites.
 ;-------------------------------------------------------------------------------     
 gx_main_screen_anim:                    ; bank: $001 logical: $c09d
-          jsr     gx_unknown_f996
+          jsr     gx_vdc_clear_satb_2
           jsr     gx_unknown_e9e2
           jsr     lfa62_00
           lda     #$05
@@ -4608,3 +4612,48 @@ gx_push_run_button_satb:                ; bank: $001 logical: $c11c
           .db $02
           .db $80                       ;           (Pal: 0, Pri: foreground)
           .db $31                       ;           Width (32) + horizontal flip (normal) + height (64) + vertical flip (normal)
+
+          .db $00                       ; ??
+
+gx_error_satb:                          ; bank: $001 logical: $c136
+          .db $05                       ; 5 SATB entries
+          .db $a0                       ; entry #0  (Y: 160)
+          .db $00
+          .db $50                       ;           (X: 80)
+          .db $00
+          .db $e8                       ;           (Pattern: $2e8)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $11                       ;           (W: 32, HFlip: normal, H:32, VFlip: Normal)
+          .db $a0                       ; entry #1  (Y: 160)
+          .db $00
+          .db $70                       ;           (X: 112)
+          .db $00
+          .db $f0                       ;           (Pattern: $2f0)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $11                       ;           (W: 32, HFlip: normal, H:32, VFlip: Normal)
+          .db $a0                       ; entry #2  (Y: 160)
+          .db $00
+          .db $90                       ;           (X: 144)
+          .db $00
+          .db $f0                       ;           (Pattern: $2f0)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $11                       ;           (W: 32, HFlip: normal, H:32, VFlip: Normal)
+          .db $a0                       ; entry #3  (Y: 160)
+          .db $00
+          .db $b0                       ;           (X: 176)
+          .db $00
+          .db $f8                       ;           (Pattern: $2f8)
+          .db $02
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $11                       ;           (W: 32, HFlip: normal, H:32, VFlip: Normal)
+          .db $a0                       ; entry #4  (Y: 160)
+          .db $00
+          .db $d0                       ;           (X: 208)
+          .db $00
+          .db $f0
+          .db $02                       ;           (Pattern: $2f0)
+          .db $80                       ;           (Pal: 0, Pri: foreground)
+          .db $11                       ;           (W: 32, HFlip: normal, H:32, VFlip: Normal)

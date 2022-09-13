@@ -226,7 +226,7 @@
         "logical": "c000",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
-    "gx_unknown_c053": {
+    "gx_error_msg": {
         "filename": "games_express.asm",
         "type": "code",
         "page": 1,
@@ -280,7 +280,16 @@
         "type": "data",
         "page": 1,
         "logical": "c11c",
-        "size": "19",
+        "size": "29",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "hex", "element_size": 1, "elements_per_line": 1 }
+    },
+    "gx_error_satb": {
+        "filename": "games_express.asm",
+        "type": "data",
+        "page": 1,
+        "logical": "c136",
+        "size": "1a",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
         "data": { "type": "hex", "element_size": 1, "elements_per_line": 1 }
     },

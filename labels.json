@@ -25,7 +25,12 @@
     { "name": "@next", "logical": "e2d8", "page": "00" },
     { "name": "@send", "logical": "e2f8", "page": "00" },
     { "name": "@l2", "logical": "e2dc", "page": "00" },
+    
     { "name": "gx_unknown_e33a", "logical": "e33a", "page": "00" },
+    { "name": "@loop", "logical": "e36d", "page": "00" },
+    { "name": "@end", "logical": "e393", "page": "00" },
+    { "name": "@quit", "logical": "e3ac", "page": "00" },
+    { "name": "@vdc.copy", "logical": "e3b0", "page": "00" },
 
     { "name": "gx_negate", "logical": "e403", "page": "00" },
     { "name": "gx_cd_read", "logical": "e40f", "page": "00" },
@@ -124,8 +129,12 @@
     { "name": "gx_unknown_f1db", "logical": "f1db", "page": "00" },
     
     { "name": "gx_unknown_f27a", "logical": "f27a", "page": "00" },
-    { "name": "gx_vdc_clear_tiles", "logical": "f989", "page": "00" },
-    { "name": "gx_unknown_f996", "logical": "f996", "page": "00" },
+
+    { "name": "@not_scd2", "logical": "f8eb", "page": "00" },
+    { "name": "@l0", "logical": "f8f5", "page": "00" },
+
+    { "name": "gx_vdc_clear_satb", "logical": "f989", "page": "00" },
+    { "name": "gx_vdc_clear_satb_2", "logical": "f996", "page": "00" },
 
     { "name": "@loop", "logical": "f9d1", "page":"00"},
 
@@ -138,6 +147,8 @@
     { "name": "gx_msg_off", "logical": "fce0", "page":"00"},
 
     { "name": "gx_unknown_ff75", "logical": "ff75", "page":"00"},
+
+    { "name": "@loop", "logical": "c05e", "page": "01"},
 
     { "name": "@wait_run", "logical": "c087", "page": "01"},
     { "name": "gx_main_screen_anim", "logical": "c09d", "page": "01"},
