@@ -42,7 +42,7 @@ gx_unknown_e000:
 ; $E039:
           jmp     gx_unknown_e17f
 ; $E03C:
-          jmp     gx_unknown_e1a0
+          jmp     gx_cd_dinfo
 ; $E03F:
           jmp     gx_unknown_fe3c
 ; $E042:
@@ -196,27 +196,31 @@ gx_write_cd_fade_timer:                 ; bank: $000 logical: $e179
           rts     
 gx_unknown_e17f:                        ; bank: $000 logical: $e17f
           stz     <$20
-          lda     #$35
+          lda     #$35                  ; output buffer lsb
           sta     <$21
-          lda     #$22
+          lda     #$22                  ; output buffer msb
           sta     <$22
-          jsr     gx_unknown_e1a0
+          jsr     gx_cd_dinfo
           tax     
           bne     le19f_00
           lda     #$01
           sta     <$20
-          lda     #$37
+          lda     #$37                  ; output buffer lsb
           sta     <$21
-          lda     #$22
+          lda     #$22                  ; output buffer msb
           sta     <$22
-          jsr     gx_unknown_e1a0
+          jsr     gx_cd_dinfo
           tax     
 le19f_00:                               ; bank: $000 logical: $e19f
           rts     
-gx_unknown_e1a0:                        ; bank: $000 logical: $e1a0
+
+;-------------------------------------------------------------------------------
+; Get DIR Info
+;-------------------------------------------------------------------------------
+gx_cd_dinfo:                            ; bank: $000 logical: $e1a0
           tii     $2020, $2207, $0008
-le1a7_00:                               ; bank: $000 logical: $e1a7
-          jsr     gx_unknown_e25c
+@loop:                                  ; bank: $000 logical: $e1a7
+          jsr     gx_scsi_clear_buffer
           lda     #$de
           sta     $2210
           lda     <$20
@@ -225,7 +229,7 @@ le1a7_00:                               ; bank: $000 logical: $e1a7
           sta     $2212
           jsr     gx_scsi_cmd
           cmp     #$c8
-          bne     le1e6_00
+          bne     @end
           lda     #$04
           sta     <$23
           stz     <$24
@@ -233,15 +237,15 @@ le1a7_00:                               ; bank: $000 logical: $e1a7
           jsr     gx_unknown_e4cd
           tii     $2207, $2020, $0008
           cmp     #$00
-          beq     le1e6_00
+          beq     @end
           jsr     gx_unknown_e532
-          bcs     le1e6_00
+          bcs     end
           tii     $2207, $2020, $0008
-          jmp     le1a7_00
-le1e6_00:                               ; bank: $000 logical: $e1e6
+          jmp     @loop
+@end:                                   ; bank: $000 logical: $e1e6
           rts 
 ;-------------------------------------------------------------------------------
-; Read data from CD
+; Read data?
 ; Warning this routine doesn't not remap the destination pointer.
 ; $2021, $2022 : address of the destination buffer
 ; $2023, $2024 : number of bytes to read
@@ -300,7 +304,7 @@ gx_cd_reset:                            ; bank: $000 logical: $e22a
           rts   
   
 gx_unknown_e245:                        ; bank: $000 logical: $e245
-          jsr     gx_unknown_e25c
+          jsr     gx_scsi_clear_buffer
           stz     $2210
           jsr     gx_scsi_cmd
           jsr     gx_unknown_e4cd
@@ -313,7 +317,7 @@ le25a_00:                               ; bank: $000 logical: $e25a
           clc     
           rts     
 
-gx_unknown_e25c:                        ; bank: $000 logical: $e25c
+gx_scsi_clear_buffer:                   ; bank: $000 logical: $e25c
           stz     $2211
           tii     $2211, $2212, $0008
           rts     
@@ -453,7 +457,7 @@ le339_00:                               ; bank: $000 logical: $e339
 ; 2023 : ?
 gx_unknown_e33a:                        ; bank: $000 logical: $e33a
           tii     $2020, $2207, $0008
-          jsr     gx_unknown_e25c       ; clears the 9 bytes starting at $2211
+          jsr     gx_scsi_clear_buffer  ; clears the 9 bytes starting at $2211
           lda     #$08
           sta     $2210
           lda     <$27
@@ -783,7 +787,7 @@ le584_00:                               ; bank: $000 logical: $e584
 gx_unknown_e586:                        ; bank: $000 logical: $e586
           stz     $2225
           tii     $2225, $2226, $0009
-          jsr     gx_unknown_e25c
+          jsr     gx_scsi_clear_buffer
           lda     #$00
           sta     $2210
           lda     #$0a
@@ -843,7 +847,7 @@ le5f6_00:                               ; bank: $000 logical: $e5f6
           tii     $2207, $2020, $0008
           jmp     le5d4_00
 le600_00:                               ; bank: $000 logical: $e600
-          jsr     gx_unknown_e25c
+          jsr     gx_scsi_clear_buffer
           lda     #$d9
           sta     $2210
           lda     <$20
@@ -899,7 +903,7 @@ le663_00:                               ; bank: $000 logical: $e663
           lda     #$00
           rts     
 le676_00:                               ; bank: $000 logical: $e676
-          jsr     gx_unknown_e25c
+          jsr     gx_scsi_clear_buffer
           lda     #$da
           sta     $2210
           jsr     gx_scsi_cmd
@@ -913,7 +917,7 @@ le68d_00:                               ; bank: $000 logical: $e68d
 le68e_00:                               ; bank: $000 logical: $e68e
           tii     $2020, $2207, $0008
 le695_00:                               ; bank: $000 logical: $e695
-          jsr     gx_unknown_e25c
+          jsr     gx_scsi_clear_buffer
           lda     #$dd
           sta     $2210
           lda     #$0a
@@ -1004,7 +1008,7 @@ le742_00:                               ; bank: $000 logical: $e742
 le749_00:                               ; bank: $000 logical: $e749
           tii     $2021, cd_data, $0002
           jsr     le6ca_00
-          jsr     gx_unknown_e25c
+          jsr     gx_scsi_clear_buffer
           lda     #$08
           sta     $2210
           lda     <$27
@@ -3448,7 +3452,7 @@ lf918_00:                               ; bank: $000 logical: $f918
           sta     <$21
           lda     #$22
           sta     <$22
-          jsr     gx_unknown_e1a0
+          jsr     gx_cd_dinfo
           tst     #$04, $223f
           bne     lf93a_00
           jmp     lf96e_00

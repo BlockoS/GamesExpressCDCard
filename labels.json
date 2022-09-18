@@ -1,14 +1,18 @@
 [
     { "name": "gx_unknown_e17f", "logical": "e17f", "page": "00" },
-    { "name": "gx_unknown_e1a0", "logical": "e1a0", "page": "00" },
+    { "name": "gx_cd_dinfo", "logical": "e1a0", "page": "00" },
     { "name": "gx_unknown_e1e7", "logical": "e1e7", "page": "00" },
+    
+    { "name": "@loop", "logical": "e1a7", "page": "00" },
+    { "name": "@end", "logical": "e1e6", "page": "00" },
+    
     { "name": "@read", "logical": "e1fa", "page": "00" },
     { "name": "@l0", "logical": "e209", "page": "00" },
     { "name": "@resp", "logical": "e21a", "page": "00" },
     { "name": "gx_cd_reset", "logical": "e22a", "page": "00" },
     { "name": "@loop", "logical": "e241", "page": "00" },
     { "name": "gx_unknown_e245", "logical": "e245", "page": "00" },
-    { "name": "gx_unknown_e25c", "logical": "e25c", "page": "00" },
+    { "name": "gx_scsi_clear_buffer", "logical": "e25c", "page": "00" },
     { "name": "gx_cd_wait", "logical": "e267", "page": "00" },
     { "name": "@l0", "logical": "e269", "page": "00" },
     { "name": "@l1", "logical": "e26b", "page": "00" },
