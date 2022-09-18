@@ -24,7 +24,7 @@ gx_unknown_e000:
 ; $E01E:
           jmp     gx_read_joypad
 ; $E021:
-          jmp     gx_unknown_fce4
+          jmp     gx_unpack
 ; $E024:
           jmp     gx_vdc_load_vram
 ; $E027:
@@ -1375,6 +1375,7 @@ gx_unknown_e9e4:                        ; bank: $000 logical: $e9e4
           lda     #$02
           sta     $228b, X
           jmp     lea5a_00
+          
 gx_unknown_ea19:                        ; bank: $000 logical: $ea19
           phx     
           ldx     gx_proc.last
@@ -3544,6 +3545,8 @@ lf99a_00:                               ; fill 2791 to 27a1 with ff
           bne     @loop
           rts    
 
+; input : A
+;
 lf9e5_00:                               ; bank: $000 logical: $f9e5
           stz     <$06
           stz     <$07
@@ -3551,8 +3554,8 @@ lf9e5_00:                               ; bank: $000 logical: $f9e5
           stz     <$09
 lf9ed_00:                               ; bank: $000 logical: $f9ed
           cmp     #$10
-          bcc     lf9f5_00
-          lsr     A
+          bcc     lf9f5_00              ; while A < 16
+          lsr     A                     ;   A >>= 1
           jmp     lf9ed_00
 lf9f5_00:                               ; bank: $000 logical: $f9f5
           tax     
@@ -3842,19 +3845,19 @@ lfbea_00:                               ; bank: $000 logical: $fbea
 lfbf5_00:                               ; bank: $000 logical: $fbf5
           pha     
           ldy     #$05
-          lda     [$50], Y
+          lda     [$50], Y              ; load ?? lsb to $204e
           sta     <$4e
           iny     
-          lda     [$50], Y
+          lda     [$50], Y              ; load ?? msb to $204f
           sta     <$4f
           ldy     #$0d
-          lda     [$50], Y
+          lda     [$50], Y              ; load ?? to $27b7
           sta     $27b7
           ldy     #$03
-          lda     [$50], Y
+          lda     [$50], Y              ; load ?? to $27b3
           sta     $27b3
           iny     
-          lda     [$50], Y
+          lda     [$50], Y              ; load ?? to $27b4
           sta     $27b4
           lda     [$4e]
           bmi     lfc28_00
@@ -3981,7 +3984,8 @@ gx_msg_on:                              ; bank: $000 logical: $fcdc
 gx_msg_off:                             ; bank: $000 logical: $fce0
           db "OFF",$00 
 ;-------------------------------------------------------------------------------
-; decode gfx to RAM ?
+; Decode packed data.
+;
 ; Parameters:
 ;   $27ba - source bank
 ;   $2054 - source address LSB 
@@ -3989,129 +3993,129 @@ gx_msg_off:                             ; bank: $000 logical: $fce0
 ;   $2052 - destination address LSB 
 ;   $2053 - destination address MSB
 ;-------------------------------------------------------------------------------
-gx_unknown_fce4:                        ; bank: $000 logical: $fce4
+gx_unpack:                              ; bank: $000 logical: $fce4
           lda     <$55
-lfce6_00:                               ; remap pointer
+@remap.src.00:                          ; remap pointer
           cmp     #$60
-          bcc     lfcf1_00
+          bcc     @remap.src.01
           sbc     #$20
           inc     $27ba                 ; next page/bank
-          bra     lfce6_00
-lfcf1_00:
+          bra     @remap.src.00
+@remap.src.01:
           sta     <$55
           tma     #$02                  ; save mpr 2
           sta     $27bb
           tma     #$03                  ; save mpr 3
           sta     $27bc
-          lda     $27ba                 ; map source page ot mpr 2 and 3
+          lda     $27ba                 ; map source page to mpr 2 and 3
           tam     #$02
           inc     A
           tam     #$03
           lda     [$54]                 ; $27b8 = [$54]
-          sta     $27b8
+          sta     $27b8                 ; encoded sequence count
           inc     <$54                  ; increment source pointer
-          bne     lfd10_00
+          bne     @l0
           inc     <$55
-lfd10_00:
+@l0:
           clx     
-lfd11_00:                               ; remap source pointer if nedeed
+@decode:                                ; remap source pointer if nedeed
           lda     <$55
           cmp     #$60
-          bcc     lfd22_00
+          bcc     @no.remap
           sbc     #$20
           sta     <$55
           tma     #$03
           tam     #$02
           inc     A
           tam     #$03
-lfd22_00:
+@no.remap:                              ; bank: $000 logical: $fd22
           lda     [$54]
           cmp     #$ff
-          beq     lfd33_00
+          beq     @skip                 ; $ff: empty sequence
           bit     #$80
-          beq     lfd49_00
+          beq     @other                ; raw copy or incremental sequence
           bit     #$40
-          beq     lfd76_00
-          jmp     lfddb_00
-lfd33_00:
+          beq     @rle.b                ; the data is rle encoded (either word or byte)
+          jmp     @rle.w
+@skip:
           inc     <$54                  ; increment source pointer
-          bne     lfd39_00
+          bne     @l1
           inc     <$55
-lfd39_00:                               ; bank: $000 logical: $fd39
+@l1:                                    ; bank: $000 logical: $fd39
           dec     $27b8
-          bne     lfd11_00
-          lda     $27bb
+          bne     @decode               ; loop until there is something to decode
+          lda     $27bb                 ; restore mpr 2
           tam     #$02
-          lda     $27bc
+          lda     $27bc                 ; restore mpr 3
           tam     #$03
           rts     
-lfd49_00:                               ; bank: $000 logical: $fd49
+@other:                                 ; bank: $000 logical: $fd49
           bit     #$40
-          bne     lfd9e_00
-          and     #$3f
+          bne     @sequence
+          and     #$3f                  ; count
           tax     
-          inc     <$54
-          bne     lfd56_00
+          inc     <$54                  ; incremement source pointer
+          bne     @l1
           inc     <$55
-lfd56_00:                               ; bank: $000 logical: $fd56
+@l1:                                    ; bank: $000 logical: $fd56
           cly     
-lfd57_00:                               ; bank: $000 logical: $fd57
+@raw.loop:                              ; bank: $000 logical: $fd57
           lda     [$54], Y
           sta     [$52], Y
           iny     
           dex     
-          bne     lfd57_00
-          clc     
+          bne     @raw.loop
+          clc                           ; update destination pointer (dest += count)
           tya     
           adc     <$54
           sta     <$54
-          bcc     lfd69_00
+          bcc     @raw.l0
           inc     <$55
-lfd69_00:                               ; bank: $000 logical: $fd69
-          clc     
+@raw.l0:                                ; bank: $000 logical: $fd69
+          clc                           ; update source pointer (src += count)
           tya     
           adc     <$52
           sta     <$52
-          bcc     lfd73_00
+          bcc     @raw.l1
           inc     <$53
-lfd73_00:                               ; bank: $000 logical: $fd73
-          jmp     lfd11_00
-lfd76_00:                               ; bank: $000 logical: $fd76
+@raw.l1:                                ; bank: $000 logical: $fd73
+          jmp     @decode
+@rle.b:                                 ; bank: $000 logical: $fd76
           and     #$3f
-          tax     
+          tax                           ; count
           ldy     #$01
-          lda     [$54], Y
+          lda     [$54], Y              ; value
           cly     
-lfd7e_00:                               ; bank: $000 logical: $fd7e
+@rle.b.loop:                            ; bank: $000 logical: $fd7e
           sta     [$52], Y
           iny     
           dex     
-          bne     lfd7e_00
-          clc     
+          bne     @rle.b.loop
+          clc                           ; move source pointer past count+value
           lda     <$54
           adc     #$02
           sta     <$54
           lda     <$55
           adc     #$00
           sta     <$55
-          clc     
+          clc                           ; update destination pointer (dest += count)
           tya     
           adc     <$52
           sta     <$52
-          bcc     lfd9b_00
+          bcc     @rle.b.l0
           inc     <$53
-lfd9b_00:                               ; bank: $000 logical: $fd9b
-          jmp     lfd11_00
-lfd9e_00:                               ; bank: $000 logical: $fd9e
-          and     #$3f
+@rle.b.l0:                              ; bank: $000 logical: $fd9b
+          jmp     @decode
+@sequence:                              ; bank: $000 logical: $fd9e
+          and     #$3f                  ; count
           tax     
           ldy     #$01
-          lda     [$54], Y
+          lda     [$54], Y              ; sequence start lsb
           sta     <$56
           iny     
-          lda     [$54], Y
+          lda     [$54], Y              ; sequence start msb
           sta     <$57
-          clc     
+          clc                           ; source pointer += 3
           lda     <$54
           adc     #$03
           sta     <$54
@@ -4119,46 +4123,46 @@ lfd9e_00:                               ; bank: $000 logical: $fd9e
           adc     #$00
           sta     <$55
           cly     
-lfdba_00:                               ; bank: $000 logical: $fdba
-          lda     <$56
+@sequence.loop:                         ; bank: $000 logical: $fdba
+          lda     <$56                  ; [destination] = sequence++
           sta     [$52], Y
           iny     
           lda     <$57
           sta     [$52], Y
           iny     
           inc     <$56
-          bne     lfdca_00
+          bne     @sequence.l0
           inc     <$57
-lfdca_00:                               ; bank: $000 logical: $fdca
+@sequence.l0:                           ; bank: $000 logical: $fdca
           dex     
-          bne     lfdba_00
+          bne     @sequence.loop
           clc     
-          clc     
+          clc                           ; update destination pointer (dest += 2*count)
           tya     
           adc     <$52
           sta     <$52
-          bcc     lfdd8_00
+          bcc     @sequence.l1
           inc     <$53
-lfdd8_00:                               ; bank: $000 logical: $fdd8
-          jmp     lfd11_00
-lfddb_00:                               ; bank: $000 logical: $fddb
-          and     #$3f
+@sequence.l1:                           ; bank: $000 logical: $fdd8
+          jmp     @decode
+@rle.w:                                 ; bank: $000 logical: $fddb
+          and     #$3f                  ; count
           tax     
-          ldy     #$01
+          ldy     #$01                  ; value lsb
           lda     [$54], Y
           sta     <$56
           iny     
-          lda     [$54], Y
+          lda     [$54], Y              ; value msb
           sta     <$57
           clc     
-          lda     <$54
+          lda     <$54                  ; move pointer past count+value
           adc     #$03
           sta     <$54
           lda     <$55
           adc     #$00
           sta     <$55
-          cly     
-lfdf7_00:                               ; bank: $000 logical: $fdf7
+          cly                           ; copy X times the word to destination
+@rle.w.loop:                            ; bank: $000 logical: $fdf7
           lda     <$56
           sta     [$52], Y
           iny     
@@ -4166,15 +4170,15 @@ lfdf7_00:                               ; bank: $000 logical: $fdf7
           sta     [$52], Y
           iny     
           dex     
-          bne     lfdf7_00
-          clc     
+          bne     @rle.w.loop
+          clc                           ; update destination pointer (dest += 2*count)
           tya     
           adc     <$52
           sta     <$52
-          bcc     lfe0e_00
+          bcc     @rle.w.l0
           inc     <$53
-lfe0e_00:                               ; bank: $000 logical: $fe0e
-          jmp     lfd11_00
+@rle.w.l0:                              ; bank: $000 logical: $fe0e
+          jmp     @decode
 
 ;-------------------------------------------------------------------------------
 ; byte size to sector count

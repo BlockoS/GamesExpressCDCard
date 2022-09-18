@@ -182,7 +182,7 @@
         "data": { "type": "string", "elements_per_line": 4 }
     },
 
-    "gx_unknown_fce4": {
+    "gx_unpack": {
         "filename": "games_express.asm",
         "type": "code",
         "page": 0,

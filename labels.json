@@ -145,7 +145,36 @@
 
     { "name": "gx_msg_on", "logical": "fcdc", "page":"00"},
     { "name": "gx_msg_off", "logical": "fce0", "page":"00"},
+    
+    { "name": "@remap.src.00", "logical": "fce6", "page":"00" },
+    { "name": "@remap.src.01", "logical": "fcf1", "page":"00" },
+    
+    { "name": "@l0", "logical": "fd10", "page":"00" },
+    { "name": "@decode", "logical": "fd11", "page":"00" },
+    { "name": "@no.remap", "logical": "fd22", "page":"00" },
+    { "name": "@skip", "logical": "fd33", "page":"00" },
+    { "name": "@l1", "logical": "fd39", "page":"00" },
+    
+    { "name": "@other", "logical": "fd49", "page":"00" },
 
+    { "name": "@l1", "logical": "fd56", "page":"00" },
+    { "name": "@raw.loop", "logical": "fd57", "page":"00" },
+    { "name": "@raw.l0", "logical": "fd69", "page":"00" },
+    { "name": "@raw.l1", "logical": "fd73", "page":"00" },
+    
+    { "name": "@rle.b", "logical": "fd76", "page":"00" },
+    { "name": "@rle.b.loop", "logical": "fd7e", "page":"00" },
+    { "name": "@rle.b.l0", "logical": "fd9b", "page":"00" },
+    
+    { "name": "@sequence", "logical": "fd9e", "page":"00" },
+    { "name": "@sequence.loop", "logical": "fdba", "page":"00" },
+    { "name": "@sequence.l0", "logical": "fdca", "page":"00" },
+    { "name": "@sequence.l1", "logical": "fdd8", "page":"00" },
+   
+    { "name": "@rle.w", "logical": "fddb", "page":"00" },
+    { "name": "@rle.w.loop", "logical": "fdf7", "page":"00" },
+    { "name": "@rle.w.l0", "logical": "fe0e", "page":"00" },
+    
     { "name": "gx_unknown_ff75", "logical": "ff75", "page":"00"},
 
     { "name": "@loop", "logical": "c05e", "page": "01"},
