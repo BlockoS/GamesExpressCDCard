@@ -1228,22 +1228,23 @@ gx_proc_reset:                          ; bank: $000 logical: $e903
           lda     #$20
           sta     gx_proc.stack_ptr, X          ; set the routine stack offset
           lda     #$04
-          sta     $228b, X                      ; 0 => free
-                                                ; 1 => ??
-                                                ; 2 => ??
-                                                ; 4 => ??
-                                                ; 8 => ??
+          sta     $228b, X                      ; bit 0 => free
+                                                ;     1 => trigger irq2 ?
+                                                ;     2 => ??
+                                                ;     3 => active/to be run ?
+                                                ;  ....
+                                                ;     7 => ? 
                                                 
           stz     $22b8, X                      ; [todo] ???
           dex     
-@loop:                                          ; [todo] ???
+@loop:                                          ; clear the rest of the proc list
               lda     #$00
               sta     $228b, X
               stz     $2290, X
               stz     $22b8, X
               dex     
               bne     @loop
-          stz     gx_proc.last
+          stz     gx_proc.current
           lda     #$80
           sta     $22b8, X
           lda     #$81
@@ -1277,7 +1278,7 @@ gx_unknown_e95b:                        ; bank: $000 logical: $e95b
           tsb     gx_proc.lock
           stx     <$29
           sty     <$28
-          ldx     gx_proc.last
+          ldx     gx_proc.current
           ldy     #$01
           lda     [$28]
           sta     gx_proc.lsb, X
@@ -1310,45 +1311,47 @@ gx_proc_load:                           ; bank: $000 logical: $e98c
           stx     <$29                      ; set data pointer
           sty     <$28
           clx     
-le996_00:                                   ; search for the first empty entry in the process list
+@search:                                    ; search for the first empty entry in the process list
               lda     $228b, X              ; what's inside 228b and onwards?
               cmp     #$00
               beq     @found
           inx     
           cmp     #$05
-          bne     le996_00
+          bne     @search
           brk                               ; trigger IRQ2 => run process list ?
 @found:
           lda     #$04
           sta     $228b, X
           ldy     #$01
-          lda     [$28]
+          lda     [$28]                     ; load proc address
           sta     gx_proc.lsb, X
           lda     [$28], Y
           sta     gx_proc.msb, X
           iny     
-          lda     [$28], Y
+          lda     [$28], Y                  ; stack offset
           sta     gx_proc.stack_ptr, X
           iny     
-          lda     [$28], Y
+          lda     [$28], Y                  ; flag?
           sta     $22b8, X
           lda     #$00
           sta     gx_proc.reg_p, X
           lda     #$01
           trb     gx_proc.lock              ; unlock process list
           txa     
-          rts     
+          rts   
+
 gx_unknown_e9cc:                        ; bank: $000 logical: $e9cc
-          ldx     gx_proc.last
+          ldx     gx_proc.current
           lda     #$00
           sta     $228b, X
           jmp     lea55_00
 gx_unknown_e9d7:                        ; bank: $000 logical: $e9d7
-          cpx     gx_proc.last
+          cpx     gx_proc.current
           beq     gx_unknown_e9cc
           lda     #$00
           sta     $228b, X
           rts     
+
 gx_unknown_e9e2:                        ; bank: $000 logical: $e9e2
           lda     #$01
 gx_unknown_e9e4:                        ; bank: $000 logical: $e9e4
@@ -1356,33 +1359,33 @@ gx_unknown_e9e4:                        ; bank: $000 logical: $e9e4
           lda     #$01
           tsb     gx_proc.lock
           txa     
-          ldx     gx_proc.last
-          sta     gx_proc.reg_x, X
+          ldx     gx_proc.current          ; use the last proc
+          sta     gx_proc.reg_x, X      ; backup X register
           tya     
-          sta     gx_proc.reg_y, X
+          sta     gx_proc.reg_y, X      ; backup Y register
           pla     
           php     
-          sta     $2290, X
+          sta     $2290, X              ; ???
           pla     
-          sta     gx_proc.reg_p, X
-          pla     
-          clc     
+          sta     gx_proc.reg_p, X      ; backup status flag
+          pla                           ; retrieve return address
+          clc
           adc     #$01
-          sta     gx_proc.lsb, X
+          sta     gx_proc.lsb, X        ; and set it as the next proc
           pla     
           adc     #$00
           sta     gx_proc.msb, X
           sax     
-          tsx     
+          tsx                           ; backup stack pointer offset
           sax     
           sta     gx_proc.stack_ptr, X
-          lda     #$02
+          lda     #$02                  ; set flag ?
           sta     $228b, X
           jmp     lea5a_00
           
 gx_unknown_ea19:                        ; bank: $000 logical: $ea19
           phx     
-          ldx     gx_proc.last
+          ldx     gx_proc.current
           sta     gx_proc.reg_a, X
           pla     
           sta     gx_proc.reg_x, X
@@ -1418,7 +1421,7 @@ lea55_00:                               ; bank: $000 logical: $ea55
 lea5a_00:                               ; bank: $000 logical: $ea5a
           clx     
 lea5b_00:                               ; bank: $000 logical: $ea5b
-          lda     $228b, X
+          lda     $228b, X              ; find the next proc to run
           cmp     #$04
           beq     lea6b_00
           inx     
@@ -1431,31 +1434,36 @@ gx_wait_forever:                        ; bank: $000 logical: $ea68
           cli     
 @loop:                                  ; bank: $000 logical: $ea69
           bra     @loop
+
+;-------------------------------------------------------------------------------
+; [todo] gx_proc.run
+;-------------------------------------------------------------------------------
 lea6b_00:                               ; bank: $000 logical: $ea6b
-          stx     gx_proc.last
+          stx     gx_proc.current       ; 
           lda     #$01
           ora     $22b8, X
-          sta     $228b, X
-          lda     gx_proc.reg_y, X
+          sta     $228b, X              ; update flag
+          lda     gx_proc.reg_y, X      ; future Y reg
           tay     
-          lda     gx_proc.stack_ptr, X      ; stack offset
+          lda     gx_proc.stack_ptr, X  ; stack offset
           sax     
           txs     
           sax     
-          lda     gx_proc.msb, X            ; return address MSB
+          lda     gx_proc.msb, X        ; proc MSB
           pha     
-          lda     gx_proc.lsb, X            ; return address LSB
+          lda     gx_proc.lsb, X        ; proc LSB
           pha     
-          lda     gx_proc.reg_p, X          ; P register
+          lda     gx_proc.reg_p, X      ; status register
           pha     
-          lda     gx_proc.reg_x, X          ; future X reg
+          lda     gx_proc.reg_x, X      ; future X reg
           pha     
           sei     
           lda     #$01
           trb     gx_proc.lock
-          lda     gx_proc.reg_a, X
+          lda     gx_proc.reg_a, X      ; future A reg
           plx     
-          rti     
+          rti                           ; jump to the proc
+
 gx_irq_nmi:                             ; bank: $000 logical: $ea9b
           rti     
 gx_irq_timer:                           ; bank: $000 logical: $ea9c
@@ -1687,7 +1695,7 @@ lec2d_00:
           sta     video_reg_l
           jsr     gx_unknown_f27a
           jsr     gx_read_joypad
-          ldx     gx_proc.last
+          ldx     gx_proc.current
           lda     $228b, X
           bit     #$80
           bne     lec6b_00
@@ -1866,23 +1874,27 @@ gx_vdc_load_vram:                       ; bank: $000 logical: $ed15
           clx     
           bra     ledcb_00
 
+;-------------------------------------------------------------------------------
+; [todo]
+;-------------------------------------------------------------------------------
+gx_unknown_ed7f:
           lda     $22c6
           bne     led85_00
           rts     
 led85_00:                               ; bank: $000 logical: $ed85
-          lda     #$05
-          sta     <vdc_reg              ;  disable sprite and background display
+          lda     #$05                  ; VDC Control register
+          sta     <vdc_reg
           sta     video_reg_l
-          lda     <vdc_control+1
+          lda     <vdc_control+1        ; set auto increment to 1
           and     #$e7
           sta     <vdc_control+1
           sta     video_data_h
           lda     #$00                  ; set VRAM write pointer
           sta     <vdc_reg
           sta     video_reg_l
-          lda     $22c1
+          lda     $22c1                 ; VRAM address LSB
           sta     video_data_l
-          lda     $22c2
+          lda     $22c2                 ; VRAM address MSB
           sta     video_data_h
           lda     #$02                  ; write to VRAM data register
           sta     <vdc_reg
@@ -3491,9 +3503,10 @@ lf96e_00:                               ; bank: $000 logical: $f96e
 gx_boot:                                ; bank: $000 logical: $f978
           .db "BOOT"
           .dw gx_menu
-          .db $40,$80
+          .db $40
+          .db $80
 gx_menu:                                ; bank: $000 logical: $f980
-          jsr     led7f_00
+          jsr     gx_unknown_ed7f
           jsr     gx_unknown_e9e2
           jmp     gx_menu
 ;-------------------------------------------------------------------------------
@@ -4485,8 +4498,8 @@ gx_error_msg:                           ; bank: $001 logical: $c053
 ; Display atlernatively 3 sprites and "boot" cdrom when the user presses RUN.
 ;-------------------------------------------------------------------------------
 gx_main_screen:                             ; bank: $001 logical: $c07f
-          ldx     #$c0
-          ldy     #$99                      ; [todo] what's at $c099?
+          ldx     #high(gx_main_screen_proc)
+          ldy     #low(gx_main_screen_proc) ; [todo] what's at $c099?
           jsr     gx_proc_load
           pha     
 @wait_run:                                  ; wait for run button o be pressed.
@@ -4499,9 +4512,10 @@ gx_main_screen:                             ; bank: $001 logical: $c07f
           jsr     gx_vdc_clear_satb_2
           rts     
 
-gx_unknown_c099:                        ; bank: $001 logical: $c099
-          .dw $gx_main_screen_anim
-          .dw $8080
+gx_main_screen_proc:                        ; bank: $001 logical: $c099
+          .dw gx_main_screen_anim
+          .db $80
+          .db $80
 ;-------------------------------------------------------------------------------
 ; Main screen animation.
 ; Displays alternatively "set a disk", "and", "push run button" sprites.
