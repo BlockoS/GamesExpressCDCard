@@ -10,7 +10,7 @@ gx_unknown_e000:
 ; $E009:
           jmp     gx_proc_wait_multiple
 ; $E00C:
-          jmp     gx_unknown_e94f
+          jmp     gx_proc_set_exec
 ; $E00F:
           jmp     gx_unknown_e95b
 ; $E012:
@@ -1265,39 +1265,51 @@ le94a_00:                               ; bank: $000 logical: $e94a
           bpl     le942_00
           tya     
           rts     
-gx_unknown_e94f:                        ; bank: $000 logical: $e94f
-          php     
-          sei     
-          stz     gx_proc.delay, X
-          lda     #$04
+;-------------------------------------------------------------------------------
+; Mark the process for execution. 
+; Parameters:
+;   X : Proc id
+;-------------------------------------------------------------------------------       
+gx_proc_set_exec:                       ; bank: $000 logical: $e94f
+          php                           ; backup status register
+          sei                           ; deactivate interrupts
+          stz     gx_proc.delay, X      ; clear process delay
+          lda     #$04                  ; mark it for execution
           sta     $228b, X
-          plp     
-          rts     
+          plp                           ; restore status register
+          rts      
+
+;-------------------------------------------------------------------------------
+; Load current process.
+; Parameters:
+;   X : MSB of the process infos address
+;   Y : LSB of the process infos address
+;-------------------------------------------------------------------------------       
 gx_unknown_e95b:                        ; bank: $000 logical: $e95b
-          lda     #$01
+          lda     #$01                  ; locl list
           tsb     gx_proc.lock
           stx     <$29
           sty     <$28
           ldx     gx_proc.current
-          ldy     #$01
+          ldy     #$01                  ; load proc address
           lda     [$28]
           sta     gx_proc.lsb, X
           lda     [$28], Y
           sta     gx_proc.msb, X
           iny     
-          lda     [$28], Y
+          lda     [$28], Y              ; stack pointer
           sta     gx_proc.stack_ptr, X
           iny     
-          lda     [$28], Y
+          lda     [$28], Y              ; "return" flag
           sta     $22b8, X
           lda     #$00
-          sta     gx_proc.reg_p, X
+          sta     gx_proc.reg_p, X      ; reset status register
           lda     #$04
-          sta     $228b, X
-          jmp     lea5a_00
+          sta     $228b, X              ; mark the process for execution
+          jmp     lea5a_00              ; go through the process list and run the first available one
 
 ;-------------------------------------------------------------------------------
-; Add process to list.
+; Add process to the first available slot.
 ; Parameters:
 ;   X : MSB of the process infos address
 ;   Y : LSB of the process infos address
@@ -1316,7 +1328,7 @@ gx_proc_load:                           ; bank: $000 logical: $e98c
               cmp     #$00
               beq     @found
           inx     
-          cmp     #$05
+          cmp     #$05                      ; !! warning !! should be cpx?!
           bne     @search
           brk                               ; trigger IRQ2 => run process list ?
 @found:
@@ -1340,11 +1352,14 @@ gx_proc_load:                           ; bank: $000 logical: $e98c
           txa     
           rts   
 
+; free current process slot
 gx_unknown_e9cc:                        ; bank: $000 logical: $e9cc
           ldx     gx_proc.current
           lda     #$00
           sta     $228b, X
-          jmp     lea55_00
+          jmp     lea55_00              ; see if lower priority process are waiting to be run
+
+; free process slot
 gx_unknown_e9d7:                        ; bank: $000 logical: $e9d7
           cpx     gx_proc.current
           beq     gx_unknown_e9cc
@@ -1390,35 +1405,37 @@ gx_proc_wait_multiple:                  ; bank: $000 logical: $e9e4
           lda     #$02                  ; set flag ?
           sta     $228b, X
           jmp     lea5a_00              ; process IRQ2/CD proc and wait until IRQ1 is triggered
-          
+
+; status register and return address are on the stack
+; this means that this may be called from inside an IRQ handler       
 gx_unknown_ea19:                        ; bank: $000 logical: $ea19
           phx     
-          ldx     gx_proc.current
-          sta     gx_proc.reg_a, X
+          ldx     gx_proc.current       ; save registers
+          sta     gx_proc.reg_a, X      ; A
           pla     
-          sta     gx_proc.reg_x, X
+          sta     gx_proc.reg_x, X      ; X
           tya     
-          sta     gx_proc.reg_y, X
+          sta     gx_proc.reg_y, X      ; Y
           pla     
-          sta     gx_proc.reg_p, X
+          sta     gx_proc.reg_p, X      ; status
           pla     
-          sta     gx_proc.lsb, X
+          sta     gx_proc.lsb, X        ; return address (LSB) 
           pla     
-          sta     gx_proc.msb, X
+          sta     gx_proc.msb, X        ;                (MSB)
           sax     
           tsx     
           sax     
-          sta     gx_proc.stack_ptr, X
+          sta     gx_proc.stack_ptr, X  ; save stack offset
           lda     #$04
-          sta     $228b, X
-          ldx     #$04
+          sta     $228b, X              ; it will be run on the next pass
+          ldx     #$04                  ; now process the list
 lea41_00:                               ; bank: $000 logical: $ea41
           lda     $228b, X
           cmp     #$02
           bne     lea52_00
-          dec     gx_proc.delay, X
+          dec     gx_proc.delay, X      ; update delay
           bne     lea52_00
-          lda     #$04
+          lda     #$04                  ; run the proc when it reaches 0
           sta     $228b, X
 lea52_00:                               ; bank: $000 logical: $ea52
           dex     
@@ -1443,9 +1460,6 @@ gx_wait_forever:                        ; bank: $000 logical: $ea68
 @loop:                                  ; bank: $000 logical: $ea69
           bra     @loop
 
-;-------------------------------------------------------------------------------
-; [todo] gx_proc.run
-;-------------------------------------------------------------------------------
 lea6b_00:                               ; bank: $000 logical: $ea6b
           stx     gx_proc.current       ; 
           lda     #$01

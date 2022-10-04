@@ -67,7 +67,7 @@
 
     { "name": "gx_proc_reset", "logical": "e903", "page": "00" },
     { "name": "@loop", "logical": "e922", "page": "00" },
-    { "name": "gx_unknown_e94f", "logical": "e94f", "page": "00" },
+    { "name": "gx_proc_set_exec", "logical": "e94f", "page": "00" },
     { "name": "gx_unknown_e95b", "logical": "e95b", "page": "00" },
     { "name": "gx_proc_load", "logical": "e98c", "page": "00" },
     { "name": "gx_unknown_e9cc", "logical": "e9cc", "page": "00" },
