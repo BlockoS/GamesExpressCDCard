@@ -72,8 +72,8 @@
     { "name": "gx_proc_load", "logical": "e98c", "page": "00" },
     { "name": "gx_unknown_e9cc", "logical": "e9cc", "page": "00" },
 
-    { "name": "gx_unknown_e9e2", "logical": "e9e2", "page": "00" },
-    { "name": "gx_unknown_e9e4", "logical": "e9e4", "page": "00" },
+    { "name": "gx_proc.wait_single", "logical": "e9e2", "page": "00" },
+    { "name": "gx_proc.wait_multiple", "logical": "e9e4", "page": "00" },
     { "name": "gx_unknown_e9d7", "logical": "e9d7", "page": "00" },
 
     { "name": "gx_unknown_ea19", "logical": "ea19", "page": "00" },
@@ -84,6 +84,7 @@
     { "name": "gx_irq_nmi", "logical": "ea9b", "page": "00" },
     { "name": "gx_irq_timer", "logical": "ea9c", "page": "00" },
     { "name": "gx_irq_2", "logical": "eaa3", "page": "00" },
+    { "name": "@default", "logical": "eaa9", "page": "00" },
     { "name": "gx_irq_reset", "logical": "eab3", "page": "00" },
     { "name": "gx_update_scroll", "logical": "eaeb", "page": "00" },
     { "name": "gx_soft_reset", "logical": "ead1", "page": "00" },
@@ -248,6 +249,7 @@
     { "name": "irq2_user_hook", "logical": "2202", "page": "f8"},
     { "name": "irq_timer_user_hook", "logical": "2263", "page": "f8"},
 
+    { "name": "gx_proc.delay", "logical": "2290", "page": "f8"},
     { "name": "gx_proc.reg_a", "logical": "2295", "page": "f8"},
     { "name": "gx_proc.reg_x", "logical": "229a", "page": "f8"},
     { "name": "gx_proc.reg_y", "logical": "229f", "page": "f8"},

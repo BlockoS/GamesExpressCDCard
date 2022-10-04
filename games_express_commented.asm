@@ -8,7 +8,7 @@ gx_unknown_e000:
 ; $E006:
           jmp     gx_unknown_ea19
 ; $E009:
-          jmp     gx_unknown_e9e4
+          jmp     gx_proc_wait_multiple
 ; $E00C:
           jmp     gx_unknown_e94f
 ; $E00F:
@@ -20,7 +20,7 @@ gx_unknown_e000:
 ; $E018:
           jmp     gx_unknown_e9d7
 ; $E01B:
-          jmp     gx_unknown_e9e2
+          jmp     gx_proc_wait_single
 ; $E01E:
           jmp     gx_read_joypad
 ; $E021:
@@ -1228,19 +1228,19 @@ gx_proc_reset:                          ; bank: $000 logical: $e903
           lda     #$20
           sta     gx_proc.stack_ptr, X          ; set the routine stack offset
           lda     #$04
-          sta     $228b, X                      ; bit 0 => free
-                                                ;     1 => trigger irq2 ?
-                                                ;     2 => ??
-                                                ;     3 => active/to be run ?
+          sta     $228b, X                      ; bit 0 => ??
+                                                ;     1 => the proc execution is delayed
+                                                ;     2 => the proc will be run
+                                                ;     3 => ??
                                                 ;  ....
-                                                ;     7 => ? 
+                                                ;     7 => "mute" proc
                                                 
-          stz     $22b8, X                      ; [todo] ???
+          stz     $22b8, X                      ; flag or'ed after the proc is run
           dex     
 @loop:                                          ; clear the rest of the proc list
               lda     #$00
               sta     $228b, X
-              stz     $2290, X
+              stz     gx_proc.delay, X
               stz     $22b8, X
               dex     
               bne     @loop
@@ -1268,7 +1268,7 @@ le94a_00:                               ; bank: $000 logical: $e94a
 gx_unknown_e94f:                        ; bank: $000 logical: $e94f
           php     
           sei     
-          stz     $2290, X
+          stz     gx_proc.delay, X
           lda     #$04
           sta     $228b, X
           plp     
@@ -1352,26 +1352,34 @@ gx_unknown_e9d7:                        ; bank: $000 logical: $e9d7
           sta     $228b, X
           rts     
 
-gx_unknown_e9e2:                        ; bank: $000 logical: $e9e2
+;-------------------------------------------------------------------------------
+; Wait for a single frame.
+;-------------------------------------------------------------------------------
+gx_proc_wait_single:                    ; bank: $000 logical: $e9e2
           lda     #$01
-gx_unknown_e9e4:                        ; bank: $000 logical: $e9e4
+;-------------------------------------------------------------------------------
+; Wait for a multiple frames.
+; Parameters:
+;   A : Frame count.
+;-------------------------------------------------------------------------------
+gx_proc_wait_multiple:                  ; bank: $000 logical: $e9e4
           pha     
           lda     #$01
           tsb     gx_proc.lock
           txa     
-          ldx     gx_proc.current          ; use the last proc
+          ldx     gx_proc.current       ; use the last proc
           sta     gx_proc.reg_x, X      ; backup X register
           tya     
           sta     gx_proc.reg_y, X      ; backup Y register
           pla     
           php     
-          sta     $2290, X              ; ???
+          sta     gx_proc.delay X       ; set delay
           pla     
           sta     gx_proc.reg_p, X      ; backup status flag
-          pla                           ; retrieve return address
-          clc
+          pla                           ; the proc address will be the return
+          clc                           ; address on the stack
           adc     #$01
-          sta     gx_proc.lsb, X        ; and set it as the next proc
+          sta     gx_proc.lsb, X
           pla     
           adc     #$00
           sta     gx_proc.msb, X
@@ -1381,7 +1389,7 @@ gx_unknown_e9e4:                        ; bank: $000 logical: $e9e4
           sta     gx_proc.stack_ptr, X
           lda     #$02                  ; set flag ?
           sta     $228b, X
-          jmp     lea5a_00
+          jmp     lea5a_00              ; process IRQ2/CD proc and wait until IRQ1 is triggered
           
 gx_unknown_ea19:                        ; bank: $000 logical: $ea19
           phx     
@@ -1408,7 +1416,7 @@ lea41_00:                               ; bank: $000 logical: $ea41
           lda     $228b, X
           cmp     #$02
           bne     lea52_00
-          dec     $2290, X
+          dec     gx_proc.delay, X
           bne     lea52_00
           lda     #$04
           sta     $228b, X
@@ -1431,7 +1439,7 @@ lea5b_00:                               ; bank: $000 logical: $ea5b
           brk     
 
 gx_wait_forever:                        ; bank: $000 logical: $ea68
-          cli     
+          cli                           ; enable interrupts
 @loop:                                  ; bank: $000 logical: $ea69
           bra     @loop
 
@@ -1476,9 +1484,9 @@ leaa2_00:                               ; bank: $000 logical: $eaa2
 ; IRQ2 interrupt handler
 ;-------------------------------------------------------------------------------
 gx_irq_2:                               ; bank: $000 logical: $eaa3
-          bbr1    <irq_m, leaa9_00
+          bbr1    <irq_m, @defaults
           jmp     [irq2_user_hook]
-leaa9_00:                               ; bank: $000 logical: $eaa9
+@default:                               ; bank: $000 logical: $eaa9
           pha     
           phx     
           phy     
@@ -1814,7 +1822,7 @@ gx_unknown_ed0b:                        ; bank: $000 logical: $ed0b
           bne     led11_00
           rts     
 led11_00:                               ; bank: $000 logical: $ed11
-          jsr     gx_unknown_e9e4
+          jsr     gx_proc_wait_multiple
           rts
 
 ;-------------------------------------------------------------------------------
@@ -3451,7 +3459,7 @@ lf90c_00:                               ; bank: $000 logical: $f90c
           jsr     gx_unknown_e245
           bcc     lf918_00
           lda     #$1e
-          jsr     gx_unknown_e9e4
+          jsr     gx_proc_wait_multiple
           bra     lf90c_00
 lf918_00:                               ; bank: $000 logical: $f918
           jsr     gx_unknown_e17f
@@ -3507,7 +3515,7 @@ gx_boot:                                ; bank: $000 logical: $f978
           .db $80
 gx_menu:                                ; bank: $000 logical: $f980
           jsr     gx_unknown_ed7f
-          jsr     gx_unknown_e9e2
+          jsr     gx_proc_wait_single
           jmp     gx_menu
 ;-------------------------------------------------------------------------------
 ; Clears the SATB at $0800
@@ -3835,7 +3843,7 @@ lfbc3_00:                               ; bank: $000 logical: $fbc3
           and     #$10
           jsr     lfbf5_00
           lda     #$01
-          jsr     gx_unknown_e9e4
+          jsr     gx_proc_wait_multiple
           lda     [$4e]
           tay     
           lda     gx_joytrg
@@ -4472,15 +4480,15 @@ gx_load_gfx_data:                                       ; bank: $001 logical: $c
 ; Display a blinking "ERROR" sprite for 
 ;-------------------------------------------------------------------------------
 gx_error_msg:                           ; bank: $001 logical: $c053
-          jsr     gx_unknown_e9e2
+          jsr     gx_proc_wait_single
           jsr     gx_vdc_clear_satb_2
-          jsr     gx_unknown_e9e2
+          jsr     gx_proc_wait_single
           ldx     #$0a                  ; make the error message blink for 5 seconds (10 * (10 + 20) frames)
 @loop:                                  ; bank: $001 logical: $c05e
           phx     
           jsr     gx_vdc_clear_satb_2
           lda     #$0a
-          jsr     gx_unknown_e9e4       ; wait for 10 frames
+          jsr     gx_proc_wait_multiple ; wait for 10 frames
           lda     #low(gx_error_satb)
           sta     <$00
           lda     #high(gx_error_satb)
@@ -4488,7 +4496,7 @@ gx_error_msg:                           ; bank: $001 logical: $c053
           jsr     lf9e5_00
           jsr     lfa62_00              ; update SATB
           lda     #$14
-          jsr     gx_unknown_e9e4       ; wait for 20 frames
+          jsr     gx_proc_wait_multiple ; wait for 20 frames
           plx     
           dex     
           bpl     @loop
@@ -4503,7 +4511,7 @@ gx_main_screen:                             ; bank: $001 logical: $c07f
           jsr     gx_proc_load
           pha     
 @wait_run:                                  ; wait for run button o be pressed.
-          jsr     gx_unknown_e9e2
+          jsr     gx_proc_wait_single
           lda     gx_joytrg                 ; get joypad 0 state
           and     #$08                      ; check if RUN bit is set
           beq     @wait_run
@@ -4522,10 +4530,10 @@ gx_main_screen_proc:                        ; bank: $001 logical: $c099
 ;-------------------------------------------------------------------------------     
 gx_main_screen_anim:                    ; bank: $001 logical: $c09d
           jsr     gx_vdc_clear_satb_2
-          jsr     gx_unknown_e9e2
+          jsr     gx_proc_wait_single
           jsr     lfa62_00
           lda     #$05
-          jsr     gx_unknown_e9e4
+          jsr     gx_proc_wait_multiple
 lc0ab_01:                               ; bank: $001 logical: $c0ab
           lda     #low(gx_set_a_disk_satb)
           sta     <$00
@@ -4534,8 +4542,9 @@ lc0ab_01:                               ; bank: $001 logical: $c0ab
           cla     
           jsr     lf9e5_00              
           jsr     lfa62_00              ; update SATB
-          lda     #$1e
-          jsr     gx_unknown_e9e4
+
+          lda     #$1e                  ; wait 30 frames
+          jsr     gx_proc_wait_multiple
 
           lda     #low(gx_and_satb)
           sta     <$00
@@ -4544,8 +4553,9 @@ lc0ab_01:                               ; bank: $001 logical: $c0ab
           cla     
           jsr     lf9e5_00
           jsr     lfa62_00
-          lda     #$1e
-          jsr     gx_unknown_e9e4
+
+          lda     #$1e                  ; wait 30 frames
+          jsr     gx_proc_wait_multiple
 
           lda     #low(gx_push_run_button_satb)
           sta     <$00
@@ -4554,12 +4564,14 @@ lc0ab_01:                               ; bank: $001 logical: $c0ab
           cla     
           jsr     lf9e5_00
           jsr     lfa62_00
-          lda     #$1e
-          jsr     gx_unknown_e9e4
+
+          lda     #$1e                  ; wait 30 frames
+          jsr     gx_proc_wait_multiple
 
           jsr     lfa62_00
-          lda     #$14
-          jsr     gx_unknown_e9e4       ; (clear)
+
+          lda     #$14                  ; wait 20 frames
+          jsr     gx_proc_wait_multiple 
           jmp     lc0ab_01
 
 gx_set_a_disk_satb:                     ; bank: $001 logical: $c0f2
