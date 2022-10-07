@@ -193,7 +193,8 @@ gx_info_string:                         ; bank: $000 logical: $e114
 gx_write_cd_fade_timer:                 ; bank: $000 logical: $e179
           and     #$0f
           sta     cd_fade_timer
-          rts     
+          rts   
+            
 gx_unknown_e17f:                        ; bank: $000 logical: $e17f
           stz     <$20
           lda     #$35                  ; output buffer lsb
@@ -303,20 +304,25 @@ gx_cd_reset:                            ; bank: $000 logical: $e22a
           bne     @loop
           rts   
   
-gx_unknown_e245:                        ; bank: $000 logical: $e245
+;-------------------------------------------------------------------------------
+; Test Unit Ready
+;-------------------------------------------------------------------------------
+gx_cd_test_ready:                       ; bank: $000 logical: $e245
           jsr     gx_scsi_clear_buffer
           stz     $2210
           jsr     gx_scsi_cmd
-          jsr     gx_unknown_e4cd
+          jsr     gx_unknown_e4cd       ; get SCSI status code
           cmp     #$00
-          beq     le25a_00
-          jsr     gx_unknown_e532
-          sec     
-          rts     
-le25a_00:                               ; bank: $000 logical: $e25a
+          beq     @ready
+              jsr     gx_unknown_e532   ; process subcode error
+              sec                       ; and try to resend command if possible
+              rts     
+@ready:                                 ; bank: $000 logical: $e25a
           clc     
           rts     
-
+;-------------------------------------------------------------------------------
+; Clear scsi command buffer.
+;-------------------------------------------------------------------------------
 gx_scsi_clear_buffer:                   ; bank: $000 logical: $e25c
           stz     $2211
           tii     $2211, $2212, $0008
@@ -681,6 +687,7 @@ le4c4_00:                               ; bank: $000 logical: $e4c4
           and     #$b8
           sta     $222f
           rts     
+
 gx_unknown_e4cd:                        ; bank: $000 logical: $e4cd
           lda     $220f
           beq     le4db_00
@@ -739,51 +746,63 @@ le52a_00:                               ; bank: $000 logical: $e52a
           lda     cd_port
           and     #$80
           bmi     le52a_00
-          rts     
+          rts  
+
+;-------------------------------------------------------------------------------
+; Check if the error is recoverable or not.
+; Parameters:
+;   A - SCSI sense keys.
+;
+; Return:
+;   C - the error is considered recoverable if the carry flag is set. 
+;-------------------------------------------------------------------------------
 gx_unknown_e532:                        ; bank: $000 logical: $e532
-          cmp     #$06
-          beq     le582_00
-          cmp     #$02
-          beq     le582_00
+          cmp     #$06                      ; unit attention
+          beq     @err
+          cmp     #$02                      ; not ready
+          beq     @err
           tii     $2210, $221b, $000a
           jsr     gx_unknown_e586
           lda     $2233
-          beq     le582_00
-          cmp     #$04
+          beq     @err
+          cmp     #$04                      ; not ready
           beq     le57f_00
-          cmp     #$11
-          beq     le582_00
-          cmp     #$15
-          beq     le582_00
-          cmp     #$16
-          beq     le582_00
-          cmp     #$0b
-          beq     le584_00
-          cmp     #$0d
-          beq     le584_00
-          cmp     #$1c
-          beq     le584_00
-          cmp     #$1d
-          beq     le584_00
-          cmp     #$20
-          bcc     le582_00
-          cmp     #$23
-          bcc     le584_00
-          cmp     #$25
-          beq     le584_00
-          cmp     #$2a
-          beq     le584_00
-          cmp     #$2c
-          beq     le584_00
-          bra     le582_00
+          cmp     #$11                      ; data field incorrect
+          beq     @err
+          cmp     #$15                      ; seek eerror
+          beq     @err
+          cmp     #$16                      ; header read error
+          beq     @err
+          cmp     #$0b                      ; no disc
+          beq     @ok
+          cmp     #$0d                      ; cover open
+          beq     @ok
+          cmp     #$1c                      ; not a digital audio track
+          beq     @ok
+          cmp     #$1d                      ; not a cdrom data track
+          beq     @ok
+          cmp     #$20                      ; invalid command
+          bcc     @err
+          cmp     #$23                      ; ???
+          bcc     @ok
+          cmp     #$25                      ; end of volume
+          beq     @ok
+          cmp     #$2a                      ; invalid parameter
+          beq     @ok
+          cmp     #$2c                      ; audio not playing
+          beq     @ok
+          bra     @err
 le57f_00:                               ; bank: $000 logical: $e57f
           sta     $2231
-le582_00:                               ; bank: $000 logical: $e582
+@err:                                   ; bank: $000 logical: $e582
           clc     
           rts     
-le584_00:                               ; bank: $000 logical: $e584
+@ok:                                    ; bank: $000 logical: $e584
           sec     
           rts     
+
+;-------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 gx_unknown_e586:                        ; bank: $000 logical: $e586
           stz     $2225
           tii     $2225, $2226, $0009
@@ -3470,7 +3489,7 @@ lf8fc_00:                               ; bank: $000 logical: $f8fc
 lf909_00:                               ; bank: $000 logical: $f909
           jsr     gx_cd_reset
 lf90c_00:                               ; bank: $000 logical: $f90c
-          jsr     gx_unknown_e245
+          jsr     gx_cd_test_ready
           bcc     lf918_00
           lda     #$1e
           jsr     gx_proc_wait_multiple
