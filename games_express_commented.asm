@@ -194,14 +194,16 @@ gx_write_cd_fade_timer:                 ; bank: $000 logical: $e179
           and     #$0f
           sta     cd_fade_timer
           rts   
-            
+
+;-------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 gx_unknown_e17f:                        ; bank: $000 logical: $e17f
           stz     <$20
           lda     #$35                  ; output buffer lsb
           sta     <$21
           lda     #$22                  ; output buffer msb
           sta     <$22
-          jsr     gx_cd_dinfo
+          jsr     gx_cd_dinfo           ; get dir info de 00 
           tax     
           bne     le19f_00
           lda     #$01
@@ -210,7 +212,7 @@ gx_unknown_e17f:                        ; bank: $000 logical: $e17f
           sta     <$21
           lda     #$22                  ; output buffer msb
           sta     <$22
-          jsr     gx_cd_dinfo
+          jsr     gx_cd_dinfo           ; get dir info de 01
           tax     
 le19f_00:                               ; bank: $000 logical: $e19f
           rts     
@@ -4454,6 +4456,9 @@ lff5b_00:                               ; bank: $000 logical: $ff5b
           sta     $2023
           lda     #$00
           rts     
+
+;-------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 gx_unknown_ff75:                        ; bank: $000 logical: $ff75
           jsr     gx_unknown_ff2f
           bmi     lff7d_00
