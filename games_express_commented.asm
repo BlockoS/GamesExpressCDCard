@@ -3447,8 +3447,8 @@ gx_main:                                ; bank: $000 logical: $f8a4
           jsr     gx_cd_reset                   ; reset cdrom drive
           jsr     gx_update_scroll
           jsr     gx_unknown_ed03
-          ldx     #high(gx_boot+4)              ; add the gx_boot to process list
-          ldy     #low(gx_boot+4)
+          ldx     #high(gx_menu_proc)              ; add the menu to process list
+          ldy     #low(gx_menu_proc)
           jsr     gx_proc_load
           lda     #$00
           jsr     gx_display_init
@@ -3516,15 +3516,15 @@ lf93a_00:                               ; bank: $000 logical: $f93a
           bpl     lf942_00
           jmp     lf96e_00
 lf942_00:                               ; bank: $000 logical: $f942
-          lda     #$78
+          lda     #low(gx_boot)         ; Search for "BOOT.BIN" file
           sta     <$00
-          lda     #$f9
+          lda     #high(gx_boot)
           sta     <$01
           lda     $2204
           sta     <$21
-          jsr     gx_unknown_ff75
+          jsr     gx_unknown_ff75       ; search and try to load "BOOT.BIN"
           cmp     #$ff
-          beq     lf96e_00
+          beq     lf96e_00              ; "BOOT.BIN" was not found
           cmp     #$00
           bne     lf909_00
           jsr     gx_vdc_disable_display
@@ -3536,7 +3536,8 @@ lf942_00:                               ; bank: $000 logical: $f942
           tam     #$05
           inc     A
           tam     #$06
-          jmp     l6000_00
+          jmp     l6000_00              ; jump to "BOOT.BIN"
+
 lf96e_00:                               ; bank: $000 logical: $f96e
           lda     #$01
           tam     #$06
@@ -3545,6 +3546,7 @@ lf96e_00:                               ; bank: $000 logical: $f96e
 
 gx_boot:                                ; bank: $000 logical: $f978
           .db "BOOT"
+gx_menu_proc:
           .dw gx_menu
           .db $40
           .db $80
@@ -4310,7 +4312,7 @@ lfe6c_00:                               ; bank: $000 logical: $fe6c
           sta     $2023 
           lda     #$80
           sta     $2021
-          jsr     gx_unknown_e33a       ; read root dir extent
+          jsr     gx_unknown_e33a       ; read root dir extent (trk: 1, off: 14h, cnt: 1)
           lda     #$00
           sta     <$00
           lda     #$40
@@ -4320,7 +4322,7 @@ lfe6c_00:                               ; bank: $000 logical: $fe6c
           lda     #$27
           sta     <$03
 lfe9b_00:                               ; bank: $000 logical: $fe9b
-          lda     [$00]
+          lda     [$00]                 ; load all entries and keep a copy in RAM
           beq     lff10_00
           sta     <$06
           ldy     #$20
@@ -4458,6 +4460,7 @@ lff5b_00:                               ; bank: $000 logical: $ff5b
           rts     
 
 ;-------------------------------------------------------------------------------
+; Load file ?
 ;-------------------------------------------------------------------------------
 gx_unknown_ff75:                        ; bank: $000 logical: $ff75
           jsr     gx_unknown_ff2f

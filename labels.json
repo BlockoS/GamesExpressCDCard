@@ -143,6 +143,8 @@
     { "name": "@not_scd2", "logical": "f8eb", "page": "00" },
     { "name": "@l0", "logical": "f8f5", "page": "00" },
 
+    { "name": "gx_menu_proc", "logical": "f97c", "page": "00" },
+
     { "name": "gx_vdc_clear_satb", "logical": "f989", "page": "00" },
     { "name": "gx_vdc_clear_satb_2", "logical": "f996", "page": "00" },
 
