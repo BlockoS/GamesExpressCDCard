@@ -1,3 +1,10 @@
+/* dump.c -- Dump files from REDUMP games express disk images.
+ * 
+ * Copyright (C) 2022 MooZ
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +18,12 @@ enum VDType {
     VD_Partition = 3,
     VD_Terminator = 0xff
 };
+
+static const size_t g_mdf_header_sz = 16;
+static const size_t g_sector_phys_sz = 2352;
+static const size_t g_sector_logi_sz = 2048;
+static uint16_t g_lb_size = g_sector_logi_sz;
+FILE *g_in;
 
 uint16_t u16lsb(const uint8_t *ptr) {
     return ptr[0] | (ptr[1]<<8);
@@ -27,13 +40,6 @@ uint32_t u32lsb(const uint8_t *ptr) {
 uint32_t u32msb(const uint8_t *ptr) {
     return ptr[3] | (ptr[2]<<8) | (ptr[1]<<16) | (ptr[0]<<24);
 }
-
-static const size_t g_mdf_header_sz = 16;
-static const size_t g_sector_phys_sz = 2352;
-static const size_t g_sector_logi_sz = 2048;
-static uint16_t g_lb_size = g_sector_logi_sz;
-FILE *g_in;
-uint8_t g_buffer[2048];
 
 size_t compute_seek(size_t offset) {
     size_t sectors = offset / g_sector_logi_sz;
@@ -57,11 +63,13 @@ int read(void *out, size_t sz) {
     size_t remaining = g_sector_logi_sz - delta;
 
     if(sz < remaining) {
+        // we don't cross sector boundary
         if(fread(out, 1, sz, g_in) != sz) {
             fprintf(stderr, "read failed: %s\n", strerror(errno));
             return 0;
         }
     } else {
+        // the read spans multiple sectors
         size_t n = remaining;
         size_t offset = delta;
 
@@ -174,27 +182,29 @@ int main(int argc, char **argv) {
         } else if(seek(32768) == 0) {   // System area: 32KB (unused) 
             fprintf(stderr, "failed to skip system area\n");
         } else {
+            uint8_t buffer[2048];
+
             do {
-                if(read(g_buffer, 2048) == 0) {
+                if(read(buffer, 2048) == 0) {
                     fprintf(stderr, "failed to read volume descriptor\n");
                     break;
                 }
-                if(g_buffer[0] == VD_Primary) {
-                    g_lb_size = u16lsb(&g_buffer[128]);
+                if(buffer[0] == VD_Primary) {
+                    g_lb_size = u16lsb(&buffer[128]);
 
-                    printf("\nsystem identifier "); fwrite(&g_buffer[8], 1, 32, stdout);
-                    printf("\nvolume identifier "); fwrite(&g_buffer[40], 1, 32, stdout);
-                    printf("\nvolume set identifier "); fwrite(&g_buffer[190], 1, 128, stdout);
-                    printf("\npublisher set identifier "); fwrite(&g_buffer[318], 1, 128, stdout);
-                    printf("\ndata preparer identifier "); fwrite(&g_buffer[446], 1, 128, stdout);
-                    printf("\napplication identifier "); fwrite(&g_buffer[574], 1, 128, stdout);
+                    printf("\nsystem identifier "); fwrite(&buffer[8], 1, 32, stdout);
+                    printf("\nvolume identifier "); fwrite(&buffer[40], 1, 32, stdout);
+                    printf("\nvolume set identifier "); fwrite(&buffer[190], 1, 128, stdout);
+                    printf("\npublisher set identifier "); fwrite(&buffer[318], 1, 128, stdout);
+                    printf("\ndata preparer identifier "); fwrite(&buffer[446], 1, 128, stdout);
+                    printf("\napplication identifier "); fwrite(&buffer[574], 1, 128, stdout);
                     fputc('\n', stdout);
         
-                    dump_files(&g_buffer[156]);
+                    dump_files(&buffer[156]);
                     break;
                }
             
-            } while(g_buffer[0] != VD_Terminator);
+            } while(buffer[0] != VD_Terminator);
         }
     }
     return ret;
