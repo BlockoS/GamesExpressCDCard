@@ -74,12 +74,12 @@ gx_unknown_e000:                                                                
           jmp     gx_vdc_set_yres                                               ; $e0cf
           jmp     gx_vdc_set_bat_size                                           ; $e0d2
           jmp     gx_unknown_f0c3                                               ; $e0d5
-          jmp     lf596_00                                                      ; $e0d8
-          jmp     lf59e_00                                                      ; $e0db
-          jmp     lf5aa_00                                                      ; $e0de
+          jmp     gx_unknown_f596                                               ; $e0d8
+          jmp     gx_unknown_f59e                                               ; $e0db
+          jmp     gx_unknown_f5aa                                               ; $e0de
           jmp     lf5b7_00                                                      ; $e0e1
           jmp     lf5c0_00                                                      ; $e0e4
-          jmp     lf5fa_00                                                      ; $e0e7
+          jmp     gx_tile_addr                                                  ; $e0e7
           jmp     lf622_00                                                      ; $e0ea
           jmp     lf6ad_00                                                      ; $e0ed
           jmp     lf683_00                                                      ; $e0f0
@@ -424,7 +424,7 @@ gx_unknown_e33a:                                                                
 @vdc.copy:                                                                      ; bank: $000 logical: $e3b0
           jsr     gx_scsi_cmd
           cmp     #$c8
-          bne     le3ed_00
+          bne     @le3ed
           cla     
           jsr     gx_vdc_set_ctrl_hi                                            ; copy data to VRAM
           lda     #$01
@@ -439,17 +439,17 @@ gx_unknown_e33a:                                                                
           lda     #$02
           sta     vdc_reg
           sta     video_reg_l
-le3da_00:                                                                       ; bank: $000 logical: $e3da
+@le3da:                                                                         ; bank: $000 logical: $e3da
           lda     #$00
           sta     <$17
           lda     #$08
           sta     <$18
           jsr     gx_cd_read_to_vdc
           cmp     #$88
-          bne     le3ed_00
+          bne     @le3ed
           dec     <$23
-          bne     le3da_00
-le3ed_00:                                                                       ; bank: $000 logical: $e3ed
+          bne     @le3da
+@le3ed:                                                                         ; bank: $000 logical: $e3ed
           jsr     gx_unknown_e4cd
           cmp     #$00
           beq     @quit
@@ -669,7 +669,7 @@ gx_unknown_e532:                                                                
           lda     $2233
           beq     @err
           cmp     #$04                                                          ; not ready
-          beq     le57f_00
+          beq     @no_ready
           cmp     #$11                                                          ; data field incorrect
           beq     @err
           cmp     #$15                                                          ; seek eerror
@@ -695,7 +695,7 @@ gx_unknown_e532:                                                                
           cmp     #$2c                                                          ; audio not playing
           beq     @ok
           bra     @err
-le57f_00:                                                                       ; bank: $000 logical: $e57f
+@no_ready:                                                                      ; bank: $000 logical: $e57f
           sta     $2231
 @err:                                                                           ; bank: $000 logical: $e582
           clc     
@@ -2907,36 +2907,50 @@ lf54e_00:                                                                       
           cpx     $2398
           bne     lf54e_00
           rts     
-lf596_00:                                                                       ; bank: $000 logical: $f596
+; ----------------------------------------------------------------------------------------------------------------------
+; Write ((0xF080) | A) to VRAM Data Register
+; Parameters:
+;   A - contains value betwen [0x00-0x0F]
+; ----------------------------------------------------------------------------------------------------------------------
+gx_unknown_f596:                                                                ; bank: $000 logical: $f596
           ora     #$80
           sta     video_data_l
           st2     #$f0
           rts     
-lf59e_00:                                                                       ; bank: $000 logical: $f59e
+; ----------------------------------------------------------------------------------------------------------------------
+; Read bytes from the address pointed by $00 until zero is read or 128 bytes has been output
+; Parameters:
+;   $00 - data buffer address
+; ----------------------------------------------------------------------------------------------------------------------
+gx_unknown_f59e:                                                                ; bank: $000 logical: $f59e
           cly     
-lf59f_00:                                                                       ; bank: $000 logical: $f59f
-          lda     [$00], Y
-          beq     lf5a9_00
-          jsr     lf596_00
+@l0:                                                                            ; bank: $000 logical: $f59f
+          lda     [$00], Y                                                      ; Load char?
+          beq     @end                                                          ; stop if A equals 0
+          jsr     gx_unknown_f596
           iny     
-          bpl     lf59f_00
-lf5a9_00:                                                                       ; bank: $000 logical: $f5a9
+          bpl     @l0
+@end:                                                                           ; bank: $000 logical: $f5a9
           rts     
-lf5aa_00:                                                                       ; bank: $000 logical: $f5aa
-          pha     
-          lsr     A
+; ----------------------------------------------------------------------------------------------------------------------
+; Parameters:
+;   A - contains 2 4bits nibbles
+; ----------------------------------------------------------------------------------------------------------------------
+gx_unknown_f5aa:                                                                ; bank: $000 logical: $f5aa
+          pha                                                                   ; backup A
+          lsr     A                                                             ; A = A>>4
           lsr     A
           lsr     A
           lsr     A
           tay     
-          lda     $f5ea, Y
-          jsr     lf596_00
+          lda     gx_unknown_table, Y
+          jsr     gx_unknown_f596
           pla     
 lf5b7_00:                                                                       ; bank: $000 logical: $f5b7
           and     #$0f
           tay     
-          lda     $f5ea, Y
-          jmp     lf596_00
+          lda     gx_unknown_table, Y
+          jmp     gx_unknown_f596
 lf5c0_00:                                                                       ; bank: $000 logical: $f5c0
           cly     
 lf5c1_00:                                                                       ; bank: $000 logical: $f5c1
@@ -2947,8 +2961,8 @@ lf5c1_00:                                                                       
           bra     lf5c1_00
 lf5ca_00:                                                                       ; bank: $000 logical: $f5ca
           pha     
-          lda     $f5ea, Y
-          jsr     lf596_00
+          lda     gx_unknown_table, Y
+          jsr     gx_unknown_f596
           pla     
           cly     
 lf5d3_00:                                                                       ; bank: $000 logical: $f5d3
@@ -2959,37 +2973,42 @@ lf5d3_00:                                                                       
           bra     lf5d3_00
 lf5dc_00:                                                                       ; bank: $000 logical: $f5dc
           pha     
-          lda     $f5ea, Y
-          jsr     lf596_00
+          lda     gx_unknown_table, Y
+          jsr     gx_unknown_f596
           ply     
-          lda     $f5ea, Y
-          jmp     lf596_00
-          bmi     lf61d_00
-          and     [$33]
-          bit     <$35, X
-          rol     <$37
-          sec     
-          and     $4241, Y
-          tma     #$02
-          eor     <$46
-lf5fa_00:                                                                       ; bank: $000 logical: $f5fa
-          stz     <$00
+          lda     gx_unknown_table, Y
+          jmp     gx_unknown_f596
+
+gx_unknown_table:                                                               ; bank: $000 logical: $f5ea
+          .db $30,$31,$32,$33
+          .db $34,$35,$36,$37
+          .db $38,$39,$41,$42
+          .db $43,$44,$45,$46
+; ----------------------------------------------------------------------------------------------------------------------
+; Compute tile address in BAT.
+; The BAT is assumed to be 64x32
+; Parmameters:
+;   X - Tile x coordinate
+;   A - Tile y coordinate
+; ----------------------------------------------------------------------------------------------------------------------
+gx_tile_addr:                                                                   ; bank: $000 logical: $f5fa
+          stz     <$00                                                          ; compute BAT address = (A*64) + X
           lsr     A
           ror     <$00
           lsr     A
           ror     <$00
-          sta     <$01
+          sta     <$01                                                          ; $01 = high(A*64)
           txa     
           ora     <$00
-          sta     <$00
-          lda     #$00
+          sta     <$00                                                          ; $00 = low(A*64) | X
+          lda     #$00                                                          ; set VRAM MAWR register
           sta     <vdc_reg
           sta     video_reg_l
           lda     <$00
           sta     video_data_l
           lda     <$01
           sta     video_data_h
-          lda     #$02
+          lda     #$02                                                          ; switch to VRAM Data Register
           sta     <vdc_reg
           sta     video_reg_l
           rts     
@@ -3813,7 +3832,7 @@ lfc2c_00:                                                                       
           lda     [$50]
           tax     
           lda     [$50], Y
-          jsr     lf5fa_00
+          jsr     gx_tile_addr
           lda     <$50
           sta     <$00
           lda     <$51
@@ -3827,7 +3846,7 @@ lfc2c_00:                                                                       
           sta     <$01
           pla     
           beq     lfc55_00
-          jsr     lf59e_00
+          jsr     gx_unknown_f59e
           bra     lfc58_00
 lfc55_00:                                                                       ; bank: $000 logical: $fc55
           jsr     lfcbe_00
@@ -3855,7 +3874,7 @@ lfc58_00:                                                                       
           iny     
           lda     [$04], Y
           sta     <$01
-          jmp     lf59e_00
+          jmp     gx_unknown_f59e
 lfc84_00:                                                                       ; bank: $000 logical: $fc84
           lda     #$20
           sta     $27b1
@@ -3887,7 +3906,7 @@ lfcb0_00:                                                                       
 lfcb5_00:                                                                       ; bank: $000 logical: $fcb5
           clc     
           adc     $27b1
-          jsr     lf596_00
+          jsr     gx_unknown_f596
           sax     
           rts     
 lfcbe_00:                                                                       ; bank: $000 logical: $fcbe
@@ -3898,20 +3917,20 @@ lfcbf_00:                                                                       
           rts     
 lfcc4_00:                                                                       ; bank: $000 logical: $fcc4
           lda     #$20
-          jsr     lf596_00
+          jsr     gx_unknown_f596
           iny     
           bra     lfcbf_00
 
 gx_yes_no_tbl:                                                                  ; bank: $000 logical: $fccc
-          .dw $fcd0
-          .dw $fcd4
+          .dw gx_msg_no
+          .dw gx_msg_yes
 gx_msg_no:                                                                      ; bank: $000 logical: $fcd0
           .db " NO",$00
 gx_msg_yes:                                                                     ; bank: $000 logical: $fcd4
           .db "YES",$00
 gx_on_off_tbl:                                                                  ; bank: $000 logical: $fcd8
-          .dw $fce0
-          .dw $fcdc
+          .dw gx_msg_off
+          .dw gx_msg_on
 gx_msg_on:                                                                      ; bank: $000 logical: $fcdc
           .db " ON",$00
 gx_msg_off:                                                                     ; bank: $000 logical: $fce0
@@ -3988,9 +4007,9 @@ gx_unpack:                                                                      
           and     #$3f                                                          ; count
           tax     
           inc     <$54                                                          ; incremement source pointer
-          bne     @l1
+          bne     @l2
           inc     <$55
-@l1:                                                                            ; bank: $000 logical: $fd56
+@l2:                                                                            ; bank: $000 logical: $fd56
           cly     
 @raw.loop:                                                                      ; bank: $000 logical: $fd57
           lda     [$54], Y

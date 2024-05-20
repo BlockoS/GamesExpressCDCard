@@ -75,6 +75,8 @@
     { "name": "@end", "logical": "e393", "page": "00" },
     { "name": "@quit", "logical": "e3ac", "page": "00" },
     { "name": "@vdc.copy", "logical": "e3b0", "page": "00" },
+    { "name": "@le3da", "logical": "e3da", "page": "00" },
+    { "name": "@le3ed", "logical": "e3ed", "page": "00" },
 
     { "name": "gx_negate", "logical": "e403", "page": "00" },
 
@@ -128,6 +130,7 @@
         "  C - the error is considered recoverable if the carry flag is set.",
         "----------------------------------------------------------------------------------------------------------------------"
     ]},
+    { "name": "@no_ready", "logical": "e57f", "page": "00" },
     { "name": "@err", "logical": "e582", "page": "00" },
     { "name": "@ok", "logical": "e584", "page": "00" },
     { "name": "gx_unknown_e586", "logical": "e586", "page": "00", "description": [
@@ -312,6 +315,41 @@
     
     { "name": "gx_unknown_f27a", "logical": "f27a", "page": "00" },
 
+    { "name": "gx_unknown_f596", "logical": "f596", "page": "00", "description": [
+        "----------------------------------------------------------------------------------------------------------------------",
+        "Write ((0xF080) | A) to VRAM Data Register",
+        "Parameters:",
+        "  A - contains value betwen [0x00-0x0F]",
+        "----------------------------------------------------------------------------------------------------------------------"
+    ]},
+    
+    { "name": "gx_unknown_f59e", "logical": "f59e", "page": "00", "description": [
+        "----------------------------------------------------------------------------------------------------------------------",
+        "Read bytes from the address pointed by $00 until zero is read or 128 bytes has been output",
+        "Parameters:",
+        "  $00 - data buffer address",
+        "----------------------------------------------------------------------------------------------------------------------"
+    ]},
+    { "name": "@l0", "logical": "f59f", "page": "00" },
+    { "name": "@end", "logical": "f5a9", "page": "00" },
+
+    { "name": "gx_unknown_f5aa", "logical": "f5aa", "page": "00", "description": [
+        "----------------------------------------------------------------------------------------------------------------------",
+        "Parameters:",
+        "  A - contains 2 4bits nibbles",
+        "----------------------------------------------------------------------------------------------------------------------"
+    ]},
+  
+    { "name": "gx_tile_addr", "logical": "f5fa", "page": "00", "description": [
+        "----------------------------------------------------------------------------------------------------------------------",
+        "Compute tile address in BAT.",
+        "The BAT is assumed to be 64x32",
+        "Parmameters:",
+        "  X - Tile x coordinate",
+        "  A - Tile y coordinate",
+        "----------------------------------------------------------------------------------------------------------------------"
+    ]},
+
     { "name": "@not_scd2", "logical": "f8eb", "page": "00" },
     { "name": "@l0", "logical": "f8f5", "page": "00" },
 
@@ -358,7 +396,7 @@
     
     { "name": "@other", "logical": "fd49", "page":"00" },
 
-    { "name": "@l1", "logical": "fd56", "page":"00" },
+    { "name": "@l2", "logical": "fd56", "page":"00" },
     { "name": "@raw.loop", "logical": "fd57", "page":"00" },
     { "name": "@raw.l0", "logical": "fd69", "page":"00" },
     { "name": "@raw.l1", "logical": "fd73", "page":"00" },

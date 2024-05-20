@@ -377,6 +377,19 @@
 { "page": "0x000", "logical": "0xf180", "text": "disable IRQ1 and IRQ2" },
 { "page": "0x000", "logical": "0xf185", "text": "VDC control register" },
 
+{ "page": "0x000", "logical": "0xf59f", "text": "Load char?" },
+{ "page": "0x000", "logical": "0xf5a1", "text": "stop if A equals 0" },
+{ "page": "0x000", "logical": "0xf5a1", "text": "loop until Y >= 128" },
+
+{ "page": "0x000", "logical": "0xf5aa", "text": "backup A" },
+{ "page": "0x000", "logical": "0xf5ab", "text": "A = A>>4" },
+
+{ "page": "0x000", "logical": "0xf5fA", "text": "compute BAT address = (A*64) + X" },
+{ "page": "0x000", "logical": "0xf602", "text": "$01 = high(A*64)" },
+{ "page": "0x000", "logical": "0xf607", "text": "$00 = low(A*64) | X" },
+{ "page": "0x000", "logical": "0xf609", "text": "set VRAM MAWR register" },
+{ "page": "0x000", "logical": "0xf61a", "text": "switch to VRAM Data Register" },
+
 { "page": "0x000", "logical": "0xf8a4", "text": "reset cdrom drive" },
 { "page": "0x000", "logical": "0xf8ad", "text": "add the menu to process list" },
 { "page": "0x000", "logical": "0xf8c7", "text": "check if the game is running on a Super CDRom 2" },

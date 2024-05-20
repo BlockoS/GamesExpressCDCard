@@ -106,7 +106,26 @@
         "type": "code",
         "page": 0,
         "logical": "f16a",
-        "size": "6fa",
+        "size": "480",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+
+    "gx_unknown_table": {    
+        "filename": "games_express.asm",
+        "type": "data",
+        "page": 0,
+        "logical": "f5ea",
+        "size": "10",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "hex", "element_size": 1, "elements_per_line": 4 }
+    },
+
+    "gx_tile_addr": {    
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f5fa",
+        "size": "26a",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
 
