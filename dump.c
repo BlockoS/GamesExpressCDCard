@@ -192,14 +192,14 @@ int main(int argc, char **argv) {
                 if(buffer[0] == VD_Primary) {
                     g_lb_size = u16lsb(&buffer[128]);
 
-                    printf("\nsystem identifier "); fwrite(&buffer[8], 1, 32, stdout);
-                    printf("\nvolume identifier "); fwrite(&buffer[40], 1, 32, stdout);
-                    printf("\nvolume set identifier "); fwrite(&buffer[190], 1, 128, stdout);
-                    printf("\npublisher set identifier "); fwrite(&buffer[318], 1, 128, stdout);
-                    printf("\ndata preparer identifier "); fwrite(&buffer[446], 1, 128, stdout);
-                    printf("\napplication identifier "); fwrite(&buffer[574], 1, 128, stdout);
-                    fputc('\n', stdout);
-        
+                    printf("\nsystem identifier \""); fwrite(&buffer[8], 1, 32, stdout);
+                    printf("\"\nvolume identifier \""); fwrite(&buffer[40], 1, 32, stdout);
+                    printf("\"\nvolume set identifier \""); fwrite(&buffer[190], 1, 128, stdout);
+                    printf("\"\npublisher set identifier \""); fwrite(&buffer[318], 1, 128, stdout);
+                    printf("\"\ndata preparer identifier \""); fwrite(&buffer[446], 1, 128, stdout);
+                    printf("\"\napplication identifier \""); fwrite(&buffer[574], 1, 128, stdout);
+                    printf("\"\n");
+
                     dump_files(&buffer[156]);
                     break;
                }

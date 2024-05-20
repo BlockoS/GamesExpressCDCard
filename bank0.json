@@ -16,7 +16,7 @@
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
         "data": { "type": "string", "elements_per_line": 16 }
     },
-    "gx_write_cd_fade_timer": {
+    "gx_cd_fade": {
         "filename": "games_express.asm",
         "type": "code",
         "page": 0,
