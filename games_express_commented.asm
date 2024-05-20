@@ -25,7 +25,7 @@ gx_unknown_e000:                                                                
           jmp     gx_cd_dinfo                                                   ; $e03c
           jmp     gx_unknown_fe3c                                               ; $e03f
           jmp     gx_unknown_ff75                                               ; $e042
-          jmp     gx_write_cd_fade_timer                                        ; $e045
+          jmp     gx_cd_fade                                                    ; $e045
           jmp     gx_scsi_cmd                                                   ; $e048
           jmp     gx_unknown_e33a                                               ; $e04b
           jmp     gx_unknown_e6ea                                               ; $e04e
@@ -825,7 +825,7 @@ le663_00:                                                                       
           rts     
 le676_00:                                                                       ; bank: $000 logical: $e676
           jsr     gx_scsi_clear_buffer
-          lda     #$da
+          lda     #$da                                                          ; pause
           sta     $2210
           jsr     gx_scsi_cmd
           jsr     gx_unknown_e4cd
@@ -839,7 +839,7 @@ le68e_00:                                                                       
           tii     $2020, $2207, $0008
 le695_00:                                                                       ; bank: $000 logical: $e695
           jsr     gx_scsi_clear_buffer
-          lda     #$dd
+          lda     #$dd                                                          ; read subchannel Q
           sta     $2210
           lda     #$0a
           sta     $2211
@@ -920,7 +920,7 @@ le72f_00:                                                                       
           sta     $222f
           rts     
 gx_unknown_e738:                                                                ; bank: $000 logical: $e738
-          tst     #$03, adpcm_dma_ctrl
+          tst     #$03, adpcm_dma_ctrl                                          ; ad_read ?
           beq     le742_00
           lda     #$ff
           bra     le793_00
@@ -930,7 +930,7 @@ le749_00:                                                                       
           tii     $2021, cd_data, $0002
           jsr     le6ca_00
           jsr     gx_scsi_clear_buffer
-          lda     #$08
+          lda     #$08                                                          ; read
           sta     $2210
           lda     <$27
           sta     $2211
@@ -3390,7 +3390,7 @@ lf8fc_00:                                                                       
           jsr     gx_main_screen
           jsr     gx_adpcm_reset
           cla     
-          jsr     gx_write_cd_fade_timer
+          jsr     gx_cd_fade
 lf909_00:                                                                       ; bank: $000 logical: $f909
           jsr     gx_cd_reset
 lf90c_00:                                                                       ; bank: $000 logical: $f90c

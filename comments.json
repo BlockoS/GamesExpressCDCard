@@ -164,6 +164,11 @@
 {"page": "0x000", "logical": "0xe575", "text": "invalid parameter"},
 {"page": "0x000", "logical": "0xe579", "text": "audio not playing"},
 
+{ "page": "0x000", "logical": "0xe679", "text": "pause" },
+{ "page": "0x000", "logical": "0xe698", "text": "read subchannel Q" },
+{ "page": "0x000", "logical": "0xe738", "text": "ad_read ?" },
+{ "page": "0x000", "logical": "0xe756", "text": "read" },
+
 { "page": "0x000", "logical": "0xe7a1", "text": "clear all bits except bits 4 and 7" },
 
 {"page": "0x000", "logical": "0xe86b", "text": "2019 contains a copy of cd_control" },
