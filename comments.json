@@ -174,6 +174,7 @@
 {"page": "0x000", "logical": "0xe86b", "text": "2019 contains a copy of cd_control" },
 {"page": "0x000", "logical": "0xe872", "text": "bit 2 is set : adpcm sample playback in progress / half end" },
 {"page": "0x000", "logical": "0xe874", "text": "reset bit 3 of cd_control" },
+{"page": "0x000", "logical": "0xe877", "text": "do the same on the shadow register" },
 {"page": "0x000", "logical": "0xe87f", "text": "bit 5 is set: data transfer done?" },
 {"page": "0x000", "logical": "0xe881", "text": "clear bit 5" },
 
@@ -253,6 +254,7 @@
 { "page": "0x000", "logical": "0xea4d", "text": "run the proc when it reaches 0" },
 { "page": "0x000", "logical": "0xea5b", "text": "find the next proc to run" },
 
+{ "page": "0x000", "logical": "0xea67", "text": "trigger IRQ2" },
 { "page": "0x000", "logical": "0xea68", "text": "enable interrupts" },
 { "page": "0x000", "logical": "0xea6b", "text": "" },
 { "page": "0x000", "logical": "0xea73", "text": "update flag" },
@@ -420,7 +422,7 @@
 { "page": "0x000", "logical": "0xf9cf", "text": "clear whole SATB entries" },
 { "page": "0x000", "logical": "0xf9df", "text": "32 bytes = 1 SATB entry" },
 
-{ "page": "0x000", "logical": "0xf9ef", "text": "while A < 16" },
+{ "page": "0x000", "logical": "0xf9ef", "text": "while A >= 16" },
 { "page": "0x000", "logical": "0xf9f1", "text": "  A >>= 1" },
 
 { "page": "0x000", "logical": "0xfa69", "text": "set VRAM write pointer" },

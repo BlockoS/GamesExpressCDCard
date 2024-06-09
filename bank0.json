@@ -106,7 +106,26 @@
         "type": "code",
         "page": 0,
         "logical": "f16a",
-        "size": "480",
+        "size": "141",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
+    },
+
+    "@vce_copy_tbl": {
+        "filename": "games_express.asm",
+        "type": "data",
+        "page": 0,
+        "logical": "f2ab",
+        "size": "8",
+        "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ],
+        "data": { "type": "jumptable", "elements_per_line": 1 }
+    },
+
+    "@vce_copy_0": {
+        "filename": "games_express.asm",
+        "type": "code",
+        "page": 0,
+        "logical": "f2b3",
+        "size": "337",
         "mpr": ["ff", "f8", 0, 0, 0, 0, 1, 0 ]
     },
 
